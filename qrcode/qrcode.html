@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>二维码生成器 - Helix</title>
+  <link rel="stylesheet" href="qrcode.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>二维码生成器</h1>
+      <p class="app-subtitle">粘贴文本或链接，一键生成二维码</p>
+    </header>
+
+    <main class="app-main">
+      <section class="input-section">
+        <label for="text-input" class="input-label">输入内容</label>
+        <textarea
+          id="text-input"
+          class="text-input"
+          placeholder="在此粘贴文本或链接..."
+          rows="6"
+        ></textarea>
+        <div class="input-actions">
+          <button id="clear-btn" class="btn btn-secondary">清空</button>
+          <button id="paste-btn" class="btn btn-secondary">粘贴</button>
+          <button id="generate-btn" class="btn btn-primary" disabled>生成二维码</button>
+        </div>
+      </section>
+
+      <section class="output-section" id="output-section" hidden>
+        <div class="divider"></div>
+        <div class="qr-container">
+          <canvas id="qr-canvas"></canvas>
+        </div>
+        <div class="output-actions">
+          <button id="download-btn" class="btn btn-primary">下载二维码</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../lib/qrcode.min.js"></script>
+  <script src="qrcode.js"></script>
+</body>
+</html>
