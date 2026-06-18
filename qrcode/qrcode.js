@@ -43,12 +43,12 @@ pasteBtn.addEventListener('click', async () => {
 
 generateBtn.addEventListener('click', generateQRCode);
 
-function generateQRCode() {
+async function generateQRCode() {
   const text = textInput.value.trim();
   if (!text) return;
 
   try {
-    QRCode.toCanvas(qrCanvas, text, {
+    await QRCode.toCanvas(qrCanvas, text, {
       width: 280,
       margin: 2,
       color: {
@@ -56,7 +56,6 @@ function generateQRCode() {
         light: '#ffffff',
       },
     });
-
     outputSection.hidden = false;
   } catch (err) {
     console.error('二维码生成失败:', err);
