@@ -22,7 +22,6 @@ clearBtn.addEventListener('click', () => {
   textInput.value = '';
   currentText = '';
   generateBtn.disabled = true;
-  outputSection.hidden = true;
 });
 
 // ── 粘贴 ──────────────────────────────────────────
@@ -49,14 +48,13 @@ async function generateQRCode() {
 
   try {
     await QRCode.toCanvas(qrCanvas, text, {
-      width: 280,
+      width: 320,
       margin: 2,
       color: {
         dark: '#1a1a1a',
         light: '#ffffff',
       },
     });
-    outputSection.hidden = false;
   } catch (err) {
     console.error('二维码生成失败:', err);
     alert('生成失败，请检查输入内容后重试。');
