@@ -110,7 +110,7 @@ async function generateQRCode() {
     for (let i = 0; i < total; i++) {
       const packet = makePacket(segments[i], total, i);
       const dataUrl = await QRCode.toDataURL(packet, {
-        width: 280,
+        width: 320,
         margin: 2,
         color: { dark: '#1a1a1a', light: '#ffffff' },
       });

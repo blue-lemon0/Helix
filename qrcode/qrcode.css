@@ -131,7 +131,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: 312px;
+  width: 344px;
   flex-shrink: 0;
 }
 
@@ -142,8 +142,8 @@ body {
   align-items: center;
   background: #fff;
   border-radius: 12px;
-  padding: 16px;
-  min-height: 312px;
+  padding: 12px;
+  min-height: 344px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
