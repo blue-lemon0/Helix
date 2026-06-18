@@ -39,9 +39,11 @@
           <button id="play-btn" class="btn btn-icon btn-play" disabled>▶</button>
           <button id="next-btn" class="btn btn-icon" disabled>⏭</button>
           <span id="page-indicator">第 1/1 张</span>
-          <span id="speed-badge" class="speed-badge" title="点击切换速度">
-            <span class="speed-value">2.5</span><span class="speed-unit">s/张</span>
-          </span>
+          <select id="speed-select" class="speed-select" title="播放间隔"></select>
+        </div>
+        <div class="page-slider-row">
+          <input type="range" id="page-slider" class="page-slider" min="0" max="0" value="0" />
+          <span id="page-slider-label" class="page-slider-label">1/1</span>
         </div>
         <div class="density">
           <div class="density-labels">

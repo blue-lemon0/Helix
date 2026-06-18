@@ -10,7 +10,9 @@ const playBtn = document.getElementById('play-btn');
 const pageIndicator = document.getElementById('page-indicator');
 const densitySlider = document.getElementById('density-slider');
 const densityInfo = document.getElementById('density-info');
-const speedBadge = document.getElementById('speed-badge');
+const speedSelect = document.getElementById('speed-select');
+const pageSlider = document.getElementById('page-slider');
+const pageSliderLabel = document.getElementById('page-slider-label');
 const modePlain = document.getElementById('mode-plain');
 const modeChain = document.getElementById('mode-chain');
 
@@ -26,11 +28,13 @@ let currentPage = 0;
 let isPlaying = false;
 let playTimer = null;
 let isChainMode = false;
-const SPEED_OPTIONS = [1000, 1500, 2000, 2500, 3000, 4000, 5000]; // 毫秒
-let speedIndex = 3; // 默认 2500ms
+const SPEED_OPTIONS = [50, 100, 200, 500, 1000, 1500, 2000]; // 毫秒
+let speedIndex = 6; // 默认 2000ms
 
 function getSpeedMs() { return SPEED_OPTIONS[speedIndex]; }
-function formatSpeed() { return (getSpeedMs() / 1000).toFixed(1).replace(/\.0$/, ''); }
+function formatSpeed() {
+  return (getSpeedMs() / 1000).toFixed(2).replace(/\.?0+$/, '');
+}
 
 // ── 工具函数 ──────────────────────────────────────
 
@@ -76,6 +80,8 @@ function goToPage(index) {
   currentPage = index;
   qrImage.src = qrCodes[currentPage];
   pageIndicator.textContent = `第 ${currentPage + 1}/${qrCodes.length} 张`;
+  pageSlider.value = currentPage;
+  pageSliderLabel.textContent = `${currentPage + 1}/${qrCodes.length}`;
   prevBtn.disabled = currentPage === 0;
   nextBtn.disabled = currentPage === qrCodes.length - 1;
   downloadBtn.disabled = false;
@@ -102,6 +108,9 @@ clearBtn.addEventListener('click', () => {
   currentPage = 0;
   qrImage.removeAttribute('src');
   pageIndicator.textContent = '第 1/1 张';
+  pageSlider.max = 0;
+  pageSlider.value = 0;
+  pageSliderLabel.textContent = '1/1';
   prevBtn.disabled = true;
   nextBtn.disabled = true;
   downloadBtn.disabled = true;
@@ -136,6 +145,7 @@ async function generateQRCode() {
     }
 
     qrCodes = results;
+    pageSlider.max = results.length - 1;
     goToPage(0);
     updateDensityInfo(total);
   } catch (err) {
@@ -199,14 +209,20 @@ playBtn.addEventListener('click', togglePlay);
 
 // ── 播放速度 ──────────────────────────────────────
 
-speedBadge.addEventListener('click', () => {
-  speedIndex = (speedIndex + 1) % SPEED_OPTIONS.length;
+speedSelect.addEventListener('change', () => {
+  speedIndex = parseInt(speedSelect.value, 10);
   localStorage.setItem('speedIndex', speedIndex);
-  speedBadge.querySelector('.speed-value').textContent = formatSpeed();
   if (isPlaying) {
     stopPlay();
     startPlay();
   }
+});
+
+// ── 页数滑块 ──────────────────────────────────────
+
+pageSlider.addEventListener('input', () => {
+  stopPlay();
+  goToPage(parseInt(pageSlider.value, 10));
 });
 
 // ── 模式切换 ──────────────────────────────────────
@@ -258,6 +274,13 @@ textInput.addEventListener('keydown', (e) => {
 // ── 初始化 ──────────────────────────────────────────
 
 (function init() {
+  // 填充速度选项
+  SPEED_OPTIONS.forEach((ms, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = (ms / 1000).toFixed(2).replace(/\.?0+$/, '') + ' s/张';
+    speedSelect.appendChild(opt);
+  });
   // 从上一次会话恢复密度滑块位置
   const saved = localStorage.getItem('densityMaxBytes');
   if (saved) {
@@ -268,9 +291,9 @@ textInput.addEventListener('keydown', (e) => {
   const savedSpeed = localStorage.getItem('speedIndex');
   if (savedSpeed !== null) {
     speedIndex = parseInt(savedSpeed, 10);
-    if (speedIndex < 0 || speedIndex >= SPEED_OPTIONS.length) speedIndex = 3;
+    if (speedIndex < 0 || speedIndex >= SPEED_OPTIONS.length) speedIndex = 6;
   }
-  speedBadge.querySelector('.speed-value').textContent = formatSpeed();
+  speedSelect.value = speedIndex;
   // 恢复模式
   const savedMode = localStorage.getItem('chainMode');
   if (savedMode === 'true') setMode(true);
