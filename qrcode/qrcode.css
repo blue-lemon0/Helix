@@ -130,8 +130,8 @@ body {
 .output-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 368px;
+  gap: 10px;
+  width: 312px;
   flex-shrink: 0;
 }
 
@@ -142,16 +142,68 @@ body {
   align-items: center;
   background: #fff;
   border-radius: 12px;
-  padding: 24px;
-  min-height: 368px;
+  padding: 16px;
+  min-height: 312px;
+  overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
-.qr-container canvas {
+.qr-container img {
   display: block;
   max-width: 100%;
-  height: auto;
+  max-height: 100%;
   border-radius: 4px;
+}
+
+/* ── Pagination ─────────────────────────────────── */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  background: #f0f0f0;
+  color: #555;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover:not(:disabled) {
+  background: #e4e4e4;
+}
+
+.btn-icon:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+#page-indicator {
+  font-size: 13px;
+  color: #888;
+  min-width: 80px;
+  text-align: center;
+  user-select: none;
+}
+
+/* ── Output actions ─────────────────────────────── */
+
+.output-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .output-actions .btn {
