@@ -36,6 +36,15 @@
           <span id="page-indicator">第 1/1 张</span>
           <button id="next-btn" class="btn btn-icon" disabled>›</button>
         </div>
+        <div class="density">
+          <div class="density-labels">
+            <span>稀疏</span>
+            <span id="density-info">2000 字节/段 · 共 1 张</span>
+            <span>紧凑</span>
+          </div>
+          <input type="range" id="density-slider" class="density-slider"
+            min="200" max="2000" value="2000" step="100" />
+        </div>
         <div class="output-actions">
           <button id="download-btn" class="btn btn-primary" disabled>下载当前</button>
           <button id="download-all-btn" class="btn btn-secondary" disabled>下载全部</button>

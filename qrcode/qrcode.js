@@ -8,10 +8,12 @@ const downloadAllBtn = document.getElementById('download-all-btn');
 const prevBtn = document.getElementById('prev-btn');
 const nextBtn = document.getElementById('next-btn');
 const pageIndicator = document.getElementById('page-indicator');
+const densitySlider = document.getElementById('density-slider');
+const densityInfo = document.getElementById('density-info');
 
 // ── 配置 ──────────────────────────────────────────
 
-const MAX_BYTES = 2000; // 单张 QR 码有效载荷上限（字节）
+function getMaxBytes() { return parseInt(densitySlider.value, 10); }
 
 // ── 状态 ──────────────────────────────────────────
 
@@ -44,6 +46,19 @@ function makePacket(data, total, index) {
   return JSON.stringify({ v: 1, t: total, i: index, d: data });
 }
 
+/** 更新密度信息 */
+function updateDensityInfo(segmentCount) {
+  const bytes = getMaxBytes();
+  const input = textInput.value.trim();
+  let count = segmentCount;
+  if (count === undefined && input) {
+    const segments = splitByByteLength(input, bytes);
+    count = segments.length;
+  }
+  densityInfo.textContent = count !== undefined
+    ? `${bytes} 字节/段 · 共 ${count} 张`
+    : `${bytes} 字节/段`;
+}
 /** 跳转到指定页 */
 function goToPage(index) {
   if (index < 0 || index >= qrCodes.length) return;
@@ -61,6 +76,7 @@ function goToPage(index) {
 textInput.addEventListener('input', () => {
   currentText = textInput.value.trim();
   generateBtn.disabled = currentText.length === 0;
+  updateDensityInfo();
 });
 
 // ── 清空 ──────────────────────────────────────────
@@ -77,6 +93,7 @@ clearBtn.addEventListener('click', () => {
   nextBtn.disabled = true;
   downloadBtn.disabled = true;
   downloadAllBtn.disabled = true;
+  updateDensityInfo(0);
 });
 
 // ── 粘贴 ──────────────────────────────────────────
@@ -102,7 +119,7 @@ async function generateQRCode() {
   if (!text) return;
 
   try {
-    const segments = splitByByteLength(text, MAX_BYTES);
+    const segments = splitByByteLength(text, getMaxBytes());
     const total = segments.length;
 
     // 批量生成
@@ -119,6 +136,7 @@ async function generateQRCode() {
 
     qrCodes = results;
     goToPage(0);
+    updateDensityInfo(total);
   } catch (err) {
     console.error('二维码生成失败:', err);
     alert('生成失败，请检查输入内容后重试。');
@@ -129,6 +147,17 @@ async function generateQRCode() {
 
 prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
 nextBtn.addEventListener('click', () => goToPage(currentPage + 1));
+
+// ── 密度滑块 ──────────────────────────────────────
+
+densitySlider.addEventListener('input', () => {
+  if (qrCodes.length > 0 && textInput.value.trim()) {
+    // 已有二维码，调整密度后自动重新生成
+    generateQRCode();
+  } else {
+    updateDensityInfo();
+  }
+});
 
 // ── 下载当前二维码 ────────────────────────────────
 
