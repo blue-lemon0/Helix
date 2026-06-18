@@ -7,6 +7,7 @@ const downloadBtn = document.getElementById('download-btn');
 const downloadAllBtn = document.getElementById('download-all-btn');
 const prevBtn = document.getElementById('prev-btn');
 const nextBtn = document.getElementById('next-btn');
+const playBtn = document.getElementById('play-btn');
 const pageIndicator = document.getElementById('page-indicator');
 const densitySlider = document.getElementById('density-slider');
 const densityInfo = document.getElementById('density-info');
@@ -20,6 +21,9 @@ function getMaxBytes() { return parseInt(densitySlider.value, 10); }
 let currentText = '';
 let qrCodes = [];
 let currentPage = 0;
+let isPlaying = false;
+let playTimer = null;
+const AUTO_PLAY_INTERVAL = 2500; // 毫秒，每张停留时长
 
 // ── 工具函数 ──────────────────────────────────────
 
@@ -69,6 +73,7 @@ function goToPage(index) {
   nextBtn.disabled = currentPage === qrCodes.length - 1;
   downloadBtn.disabled = false;
   downloadAllBtn.disabled = qrCodes.length <= 1;
+  playBtn.disabled = qrCodes.length <= 1;
 }
 
 // ── 输入状态管理 ──────────────────────────────────
@@ -82,6 +87,7 @@ textInput.addEventListener('input', () => {
 // ── 清空 ──────────────────────────────────────────
 
 clearBtn.addEventListener('click', () => {
+  stopPlay();
   textInput.value = '';
   currentText = '';
   generateBtn.disabled = true;
@@ -93,6 +99,7 @@ clearBtn.addEventListener('click', () => {
   nextBtn.disabled = true;
   downloadBtn.disabled = true;
   downloadAllBtn.disabled = true;
+  playBtn.disabled = true;
   updateDensityInfo(0);
 });
 
@@ -115,6 +122,7 @@ pasteBtn.addEventListener('click', async () => {
 generateBtn.addEventListener('click', generateQRCode);
 
 async function generateQRCode() {
+  stopPlay();
   const text = textInput.value.trim();
   if (!text) return;
 
@@ -145,8 +153,8 @@ async function generateQRCode() {
 
 // ── 翻页 ──────────────────────────────────────────
 
-prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
-nextBtn.addEventListener('click', () => goToPage(currentPage + 1));
+prevBtn.addEventListener('click', () => { stopPlay(); goToPage(currentPage - 1); });
+nextBtn.addEventListener('click', () => { stopPlay(); goToPage(currentPage + 1); });
 
 // ── 密度滑块 ──────────────────────────────────────
 
@@ -159,6 +167,39 @@ densitySlider.addEventListener('input', () => {
     updateDensityInfo();
   }
 });
+
+// ── 自动播放 ──────────────────────────────────────
+
+function stopPlay() {
+  if (playTimer) {
+    clearInterval(playTimer);
+    playTimer = null;
+  }
+  isPlaying = false;
+  playBtn.textContent = '▶';
+  playBtn.classList.remove('is-playing');
+}
+
+function togglePlay() {
+  if (isPlaying) {
+    stopPlay();
+    return;
+  }
+  // 播到末张后回到第一张继续
+  isPlaying = true;
+  playBtn.textContent = '⏸';
+  playBtn.classList.add('is-playing');
+  playTimer = setInterval(() => {
+    const next = currentPage + 1;
+    if (next >= qrCodes.length) {
+      goToPage(0);
+    } else {
+      goToPage(next);
+    }
+  }, AUTO_PLAY_INTERVAL);
+}
+
+playBtn.addEventListener('click', togglePlay);
 
 // ── 下载当前二维码 ────────────────────────────────
 

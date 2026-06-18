@@ -190,6 +190,16 @@ body {
   cursor: not-allowed;
 }
 
+.btn-play {
+  background: #e8f0fe;
+  color: #4a90d9;
+}
+
+.btn-play.is-playing {
+  background: #4a90d9;
+  color: #fff;
+}
+
 #page-indicator {
   font-size: 13px;
   color: #888;
