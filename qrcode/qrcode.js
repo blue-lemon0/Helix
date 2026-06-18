@@ -11,6 +11,8 @@ const pageIndicator = document.getElementById('page-indicator');
 const densitySlider = document.getElementById('density-slider');
 const densityInfo = document.getElementById('density-info');
 const speedBadge = document.getElementById('speed-badge');
+const modePlain = document.getElementById('mode-plain');
+const modeChain = document.getElementById('mode-chain');
 
 // ── 配置 ──────────────────────────────────────────
 
@@ -23,6 +25,7 @@ let qrCodes = [];
 let currentPage = 0;
 let isPlaying = false;
 let playTimer = null;
+let isChainMode = false;
 const SPEED_OPTIONS = [1000, 1500, 2000, 2500, 3000, 4000, 5000]; // 毫秒
 let speedIndex = 3; // 默认 2500ms
 
@@ -119,14 +122,14 @@ async function generateQRCode() {
   try {
     const segments = splitByByteLength(text, getMaxBytes());
     const total = segments.length;
-
-    // 批量生成
     const results = [];
+
     for (let i = 0; i < total; i++) {
-      const packet = makePacket(segments[i], total, i);
-      const dataUrl = await QRCode.toDataURL(packet, {
-        width: 320,
-        margin: 2,
+      const content = isChainMode
+        ? makePacket(segments[i], total, i)  // 智能拼接：JSON 包，App 自动拼接
+        : segments[i];                       // 纯文本
+      const dataUrl = await QRCode.toDataURL(content, {
+        width: 320, margin: 2,
         color: { dark: '#1a1a1a', light: '#ffffff' },
       });
       results.push(dataUrl);
@@ -206,6 +209,22 @@ speedBadge.addEventListener('click', () => {
   }
 });
 
+// ── 模式切换 ──────────────────────────────────────
+
+function setMode(chain) {
+  isChainMode = chain;
+  localStorage.setItem('chainMode', chain);
+  modePlain.classList.toggle('mode-btn-active', !chain);
+  modeChain.classList.toggle('mode-btn-active', chain);
+  // 有二维码则按新模式重生成
+  if (qrCodes.length > 0 && textInput.value.trim()) {
+    generateQRCode();
+  }
+}
+
+modePlain.addEventListener('click', () => setMode(false));
+modeChain.addEventListener('click', () => setMode(true));
+
 // ── 下载当前二维码 ────────────────────────────────
 
 downloadBtn.addEventListener('click', () => {
@@ -252,4 +271,7 @@ textInput.addEventListener('keydown', (e) => {
     if (speedIndex < 0 || speedIndex >= SPEED_OPTIONS.length) speedIndex = 3;
   }
   speedBadge.querySelector('.speed-value').textContent = formatSpeed();
+  // 恢复模式
+  const savedMode = localStorage.getItem('chainMode');
+  if (savedMode === 'true') setMode(true);
 })();

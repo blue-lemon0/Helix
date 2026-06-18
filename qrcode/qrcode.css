@@ -155,6 +155,43 @@ body {
   border-radius: 4px;
 }
 
+/* ── Mode toggle ──────────────────────────────── */
+
+.mode-toggle {
+  display: flex;
+  justify-content: center;
+}
+
+.mode-btn {
+  padding: 4px 18px;
+  border: 1.5px solid #e0e0e0;
+  background: #f7f8fa;
+  color: #999;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.mode-btn:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.mode-btn:last-child {
+  border-radius: 0 6px 6px 0;
+  border-left: none;
+}
+
+.mode-btn-active {
+  background: #4a90d9;
+  border-color: #4a90d9;
+  color: #fff;
+}
+
+.mode-btn:hover:not(.mode-btn-active) {
+  background: #eee;
+}
+
 /* ── Pagination ─────────────────────────────────── */
 
 .pagination {
