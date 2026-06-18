@@ -151,6 +151,7 @@ nextBtn.addEventListener('click', () => goToPage(currentPage + 1));
 // ── 密度滑块 ──────────────────────────────────────
 
 densitySlider.addEventListener('input', () => {
+  localStorage.setItem('densityMaxBytes', densitySlider.value); // 记住滑块位置，下次打开恢复
   if (qrCodes.length > 0 && textInput.value.trim()) {
     // 已有二维码，调整密度后自动重新生成
     generateQRCode();
@@ -188,3 +189,14 @@ textInput.addEventListener('keydown', (e) => {
     if (!generateBtn.disabled) generateQRCode();
   }
 });
+
+// ── 初始化 ──────────────────────────────────────────
+
+(function init() {
+  // 从上一次会话恢复密度滑块位置
+  const saved = localStorage.getItem('densityMaxBytes');
+  if (saved) {
+    densitySlider.value = saved;
+    updateDensityInfo();
+  }
+})();
