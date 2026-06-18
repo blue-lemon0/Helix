@@ -208,6 +208,30 @@ body {
   user-select: none;
 }
 
+.speed-badge {
+  font-size: 11px;
+  color: #4a90d9;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  user-select: none;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.speed-badge:hover {
+  background: #e8f0fe;
+}
+
+.speed-value {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.speed-unit {
+  color: #999;
+}
+
 /* ── Density slider ─────────────────────────────── */
 
 .density {

@@ -11,6 +11,7 @@ const playBtn = document.getElementById('play-btn');
 const pageIndicator = document.getElementById('page-indicator');
 const densitySlider = document.getElementById('density-slider');
 const densityInfo = document.getElementById('density-info');
+const speedBadge = document.getElementById('speed-badge');
 
 // ── 配置 ──────────────────────────────────────────
 
@@ -23,7 +24,11 @@ let qrCodes = [];
 let currentPage = 0;
 let isPlaying = false;
 let playTimer = null;
-const AUTO_PLAY_INTERVAL = 2500; // 毫秒，每张停留时长
+const SPEED_OPTIONS = [1000, 1500, 2000, 2500, 3000, 4000, 5000]; // 毫秒
+let speedIndex = 3; // 默认 2500ms
+
+function getSpeedMs() { return SPEED_OPTIONS[speedIndex]; }
+function formatSpeed() { return (getSpeedMs() / 1000).toFixed(1).replace(/\.0$/, ''); }
 
 // ── 工具函数 ──────────────────────────────────────
 
@@ -180,12 +185,7 @@ function stopPlay() {
   playBtn.classList.remove('is-playing');
 }
 
-function togglePlay() {
-  if (isPlaying) {
-    stopPlay();
-    return;
-  }
-  // 播到末张后回到第一张继续
+function startPlay() {
   isPlaying = true;
   playBtn.textContent = '⏸';
   playBtn.classList.add('is-playing');
@@ -196,10 +196,30 @@ function togglePlay() {
     } else {
       goToPage(next);
     }
-  }, AUTO_PLAY_INTERVAL);
+  }, getSpeedMs());
+}
+
+function togglePlay() {
+  if (isPlaying) {
+    stopPlay();
+    return;
+  }
+  startPlay();
 }
 
 playBtn.addEventListener('click', togglePlay);
+
+// ── 播放速度 ──────────────────────────────────────
+
+speedBadge.addEventListener('click', () => {
+  speedIndex = (speedIndex + 1) % SPEED_OPTIONS.length;
+  localStorage.setItem('speedIndex', speedIndex);
+  speedBadge.querySelector('.speed-value').textContent = formatSpeed();
+  if (isPlaying) {
+    stopPlay();
+    startPlay();
+  }
+});
 
 // ── 下载当前二维码 ────────────────────────────────
 
@@ -240,4 +260,11 @@ textInput.addEventListener('keydown', (e) => {
     densitySlider.value = saved;
     updateDensityInfo();
   }
+  // 恢复播放速度
+  const savedSpeed = localStorage.getItem('speedIndex');
+  if (savedSpeed !== null) {
+    speedIndex = parseInt(savedSpeed, 10);
+    if (speedIndex < 0 || speedIndex >= SPEED_OPTIONS.length) speedIndex = 3;
+  }
+  speedBadge.querySelector('.speed-value').textContent = formatSpeed();
 })();
