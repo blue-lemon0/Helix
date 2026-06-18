@@ -1,7 +1,6 @@
 const textInput = document.getElementById('text-input');
 const generateBtn = document.getElementById('generate-btn');
 const clearBtn = document.getElementById('clear-btn');
-const pasteBtn = document.getElementById('paste-btn');
 const qrImage = document.getElementById('qr-image');
 const downloadBtn = document.getElementById('download-btn');
 const downloadAllBtn = document.getElementById('download-all-btn');
@@ -106,20 +105,6 @@ clearBtn.addEventListener('click', () => {
   downloadAllBtn.disabled = true;
   playBtn.disabled = true;
   updateDensityInfo(0);
-});
-
-// ── 粘贴 ──────────────────────────────────────────
-
-pasteBtn.addEventListener('click', async () => {
-  try {
-    const text = await navigator.clipboard.readText();
-    textInput.value = text;
-    currentText = text.trim();
-    generateBtn.disabled = currentText.length === 0;
-    textInput.dispatchEvent(new Event('input'));
-  } catch {
-    textInput.focus();
-  }
 });
 
 // ── 生成二维码 ────────────────────────────────────

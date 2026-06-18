@@ -293,11 +293,10 @@ body {
 
 .output-actions {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .output-actions .btn {
-  width: 100%;
-  padding: 8px 24px;
+  flex: 1;
+  padding: 7px 16px;
 }
