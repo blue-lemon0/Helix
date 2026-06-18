@@ -22,17 +22,35 @@
         ></textarea>
         <div class="input-actions">
           <button id="clear-btn" class="btn btn-secondary">清空</button>
-          <button id="paste-btn" class="btn btn-secondary">粘贴</button>
           <button id="generate-btn" class="btn btn-primary" disabled>生成二维码</button>
         </div>
       </section>
 
       <section class="output-section" id="output-section">
         <div class="qr-container">
-          <canvas id="qr-canvas"></canvas>
+          <img id="qr-image" alt="QR Code" />
+        </div>
+        <div class="pagination">
+          <button id="prev-btn" class="btn btn-icon" disabled>⏮</button>
+          <button id="play-btn" class="btn btn-icon btn-play" disabled>▶</button>
+          <button id="next-btn" class="btn btn-icon" disabled>⏭</button>
+          <span id="page-indicator">第 1/1 张</span>
+          <span id="speed-badge" class="speed-badge" title="点击切换速度">
+            <span class="speed-value">2.5</span><span class="speed-unit">s/张</span>
+          </span>
+        </div>
+        <div class="density">
+          <div class="density-labels">
+            <span>稀疏</span>
+            <span id="density-info">2000 字节/段 · 共 1 张</span>
+            <span>紧凑</span>
+          </div>
+          <input type="range" id="density-slider" class="density-slider"
+            min="200" max="2000" value="2000" step="100" />
         </div>
         <div class="output-actions">
-          <button id="download-btn" class="btn btn-primary">下载</button>
+          <button id="download-btn" class="btn btn-primary" disabled>下载当前</button>
+          <button id="download-all-btn" class="btn btn-secondary" disabled>下载全部</button>
         </div>
       </section>
     </main>

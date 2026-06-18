@@ -12,7 +12,7 @@ body {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  padding: 32px;
+  padding: 16px;
 }
 
 .app {
@@ -23,11 +23,11 @@ body {
 /* ── Header ───────────────────────────────────── */
 
 .app-header {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .app-header h1 {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   color: #333;
 }
@@ -36,7 +36,7 @@ body {
 
 .app-main {
   display: flex;
-  gap: 24px;
+  gap: 16px;
   align-items: stretch;
 }
 
@@ -48,7 +48,7 @@ body {
   flex-direction: column;
   background: #fff;
   border-radius: 12px;
-  padding: 20px;
+  padding: 16px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
@@ -56,13 +56,13 @@ body {
   font-size: 13px;
   font-weight: 600;
   color: #555;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .text-input {
   flex: 1;
   width: 100%;
-  padding: 12px 14px;
+  padding: 10px 14px;
   border: 1.5px solid #e0e0e0;
   border-radius: 8px;
   font-size: 14px;
@@ -71,7 +71,7 @@ body {
   resize: vertical;
   transition: border-color 0.2s;
   outline: none;
-  min-height: 120px;
+  min-height: 100px;
 }
 
 .text-input:focus {
@@ -86,13 +86,13 @@ body {
 .input-actions {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
 /* ── Buttons ────────────────────────────────────── */
 
 .btn {
-  padding: 8px 18px;
+  padding: 7px 16px;
   border: none;
   border-radius: 6px;
   font-size: 13px;
@@ -130,8 +130,8 @@ body {
 .output-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 368px;
+  gap: 8px;
+  width: 344px;
   flex-shrink: 0;
 }
 
@@ -142,19 +142,161 @@ body {
   align-items: center;
   background: #fff;
   border-radius: 12px;
-  padding: 24px;
-  min-height: 368px;
+  padding: 8px;
+  min-height: 336px;
+  overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
-.qr-container canvas {
+.qr-container img {
   display: block;
   max-width: 100%;
-  height: auto;
+  max-height: 100%;
   border-radius: 4px;
 }
 
-.output-actions .btn {
+/* ── Pagination ─────────────────────────────────── */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-icon {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  background: #f0f0f0;
+  color: #555;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover:not(:disabled) {
+  background: #e4e4e4;
+}
+
+.btn-icon:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-play {
+  background: #e8f0fe;
+  color: #4a90d9;
+}
+
+.btn-play.is-playing {
+  background: #4a90d9;
+  color: #fff;
+}
+
+#page-indicator {
+  font-size: 13px;
+  color: #888;
+  min-width: 80px;
+  text-align: center;
+  user-select: none;
+}
+
+.speed-badge {
+  font-size: 11px;
+  color: #4a90d9;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  user-select: none;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.speed-badge:hover {
+  background: #e8f0fe;
+}
+
+.speed-value {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.speed-unit {
+  color: #999;
+}
+
+/* ── Density slider ─────────────────────────────── */
+
+.density {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.density-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #999;
+  user-select: none;
+}
+
+#density-info {
+  color: #666;
+  font-size: 11px;
+}
+
+.density-slider {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
-  padding: 10px 24px;
+  height: 4px;
+  border-radius: 2px;
+  background: #e0e0e0;
+  outline: none;
+  cursor: pointer;
+}
+
+.density-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4a90d9;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.1s;
+}
+
+.density-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.density-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4a90d9;
+  cursor: pointer;
+  border: none;
+}
+
+/* ── Output actions ─────────────────────────────── */
+
+.output-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.output-actions .btn {
+  flex: 1;
+  padding: 7px 16px;
 }
