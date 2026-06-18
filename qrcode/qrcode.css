@@ -12,7 +12,7 @@ body {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  padding: 32px;
+  padding: 16px;
 }
 
 .app {
@@ -23,11 +23,11 @@ body {
 /* ── Header ───────────────────────────────────── */
 
 .app-header {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .app-header h1 {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   color: #333;
 }
@@ -36,7 +36,7 @@ body {
 
 .app-main {
   display: flex;
-  gap: 24px;
+  gap: 16px;
   align-items: stretch;
 }
 
@@ -48,7 +48,7 @@ body {
   flex-direction: column;
   background: #fff;
   border-radius: 12px;
-  padding: 20px;
+  padding: 16px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
@@ -56,13 +56,13 @@ body {
   font-size: 13px;
   font-weight: 600;
   color: #555;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .text-input {
   flex: 1;
   width: 100%;
-  padding: 12px 14px;
+  padding: 10px 14px;
   border: 1.5px solid #e0e0e0;
   border-radius: 8px;
   font-size: 14px;
@@ -71,7 +71,7 @@ body {
   resize: vertical;
   transition: border-color 0.2s;
   outline: none;
-  min-height: 120px;
+  min-height: 100px;
 }
 
 .text-input:focus {
@@ -86,13 +86,13 @@ body {
 .input-actions {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
 /* ── Buttons ────────────────────────────────────── */
 
 .btn {
-  padding: 8px 18px;
+  padding: 7px 16px;
   border: none;
   border-radius: 6px;
   font-size: 13px;
@@ -130,7 +130,7 @@ body {
 .output-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   width: 344px;
   flex-shrink: 0;
 }
@@ -142,8 +142,8 @@ body {
   align-items: center;
   background: #fff;
   border-radius: 12px;
-  padding: 12px;
-  min-height: 344px;
+  padding: 8px;
+  min-height: 336px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
@@ -161,12 +161,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .btn-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: none;
   border-radius: 6px;
@@ -260,10 +260,10 @@ body {
 .output-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .output-actions .btn {
   width: 100%;
-  padding: 10px 24px;
+  padding: 8px 24px;
 }
