@@ -52,11 +52,23 @@ body {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
+.input-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
 .input-label {
   font-size: 13px;
   font-weight: 600;
   color: #555;
-  margin-bottom: 6px;
+}
+
+.text-length {
+  font-size: 11px;
+  color: #999;
+  user-select: none;
 }
 
 .text-input {
@@ -237,12 +249,38 @@ body {
   color: #fff;
 }
 
-#page-indicator {
+.page-indicator {
   font-size: 13px;
   color: #888;
   min-width: 80px;
   text-align: center;
   user-select: none;
+}
+
+.page-input {
+  width: 36px;
+  height: 24px;
+  padding: 0 4px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: center;
+  color: #333;
+  background: #fff;
+  outline: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.page-input::-webkit-outer-spin-button,
+.page-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.page-input:focus {
+  border-color: #4a90d9;
+  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.12);
 }
 
 .speed-select {

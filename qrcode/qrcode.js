@@ -1,4 +1,5 @@
 const textInput = document.getElementById('text-input');
+const textLength = document.getElementById('text-length');
 const generateBtn = document.getElementById('generate-btn');
 const clearBtn = document.getElementById('clear-btn');
 const qrImage = document.getElementById('qr-image');
@@ -7,7 +8,8 @@ const downloadAllBtn = document.getElementById('download-all-btn');
 const prevBtn = document.getElementById('prev-btn');
 const nextBtn = document.getElementById('next-btn');
 const playBtn = document.getElementById('play-btn');
-const pageIndicator = document.getElementById('page-indicator');
+const pageInput = document.getElementById('page-input');
+const pageTotal = document.getElementById('page-total');
 const densitySlider = document.getElementById('density-slider');
 const densityInfo = document.getElementById('density-info');
 const speedSelect = document.getElementById('speed-select');
@@ -74,16 +76,17 @@ function updateDensityInfo(segmentCount) {
     ? `${bytes} 字节/段 · 共 ${count} 张`
     : `${bytes} 字节/段`;
 }
-/** 跳转到指定页 */
+/** 跳转到指定页（支持循环） */
 function goToPage(index) {
-  if (index < 0 || index >= qrCodes.length) return;
-  currentPage = index;
+  if (qrCodes.length === 0) return;
+  currentPage = (index % qrCodes.length + qrCodes.length) % qrCodes.length;
   qrImage.src = qrCodes[currentPage];
-  pageIndicator.textContent = `第 ${currentPage + 1}/${qrCodes.length} 张`;
+  pageInput.value = currentPage + 1;
+  pageTotal.textContent = qrCodes.length;
   pageSlider.value = currentPage;
   pageSliderLabel.textContent = `${currentPage + 1}/${qrCodes.length}`;
-  prevBtn.disabled = currentPage === 0;
-  nextBtn.disabled = currentPage === qrCodes.length - 1;
+  prevBtn.disabled = qrCodes.length <= 1;
+  nextBtn.disabled = qrCodes.length <= 1;
   downloadBtn.disabled = false;
   downloadAllBtn.disabled = qrCodes.length <= 1;
   playBtn.disabled = qrCodes.length <= 1;
@@ -94,6 +97,7 @@ function goToPage(index) {
 textInput.addEventListener('input', () => {
   currentText = textInput.value.trim();
   generateBtn.disabled = currentText.length === 0;
+  textLength.textContent = `${textInput.value.length} 字符`;
   updateDensityInfo();
 });
 
@@ -104,18 +108,20 @@ clearBtn.addEventListener('click', () => {
   textInput.value = '';
   currentText = '';
   generateBtn.disabled = true;
+  textLength.textContent = '0 字符';
   qrCodes = [];
   currentPage = 0;
   qrImage.removeAttribute('src');
-  pageIndicator.textContent = '第 1/1 张';
+  pageInput.value = 1;
+  pageTotal.textContent = '1';
   pageSlider.max = 0;
   pageSlider.value = 0;
   pageSliderLabel.textContent = '1/1';
   prevBtn.disabled = true;
   nextBtn.disabled = true;
+  playBtn.disabled = true;
   downloadBtn.disabled = true;
   downloadAllBtn.disabled = true;
-  playBtn.disabled = true;
   updateDensityInfo(0);
 });
 
@@ -223,6 +229,16 @@ speedSelect.addEventListener('change', () => {
 pageSlider.addEventListener('input', () => {
   stopPlay();
   goToPage(parseInt(pageSlider.value, 10));
+});
+
+// ── 页码输入 ──────────────────────────────────────
+
+pageInput.addEventListener('change', () => {
+  stopPlay();
+  let p = parseInt(pageInput.value, 10);
+  if (isNaN(p) || p < 1) p = 1;
+  if (p > qrCodes.length) p = qrCodes.length;
+  goToPage(p - 1);
 });
 
 // ── 模式切换 ──────────────────────────────────────
