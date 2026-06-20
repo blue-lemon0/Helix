@@ -148,31 +148,64 @@ function renderFieldRow(f, siblings, index, depth) {
   nameInput.addEventListener('click', e => e.stopPropagation());
   row.appendChild(nameInput);
 
-  // Type select
-  const typeSelect = document.createElement('select');
-  typeSelect.className = 'field-type-select';
+  // Type select (hover dropdown)
+  const typeWrap = document.createElement('span');
+  typeWrap.className = 'field-type-wrap';
+  const typeCur = document.createElement('span');
+  typeCur.className = 'field-type-current';
+  typeCur.textContent = f.type;
+  typeWrap.appendChild(typeCur);
+  const typeMenu = document.createElement('div');
+  typeMenu.className = 'field-type-menu';
   const types = ['string', 'number', 'boolean', 'object', 'array'];
   for (const t of types) {
-    const opt = document.createElement('option');
-    opt.value = t; opt.textContent = t;
-    if (t === f.type) opt.selected = true;
-    typeSelect.appendChild(opt);
-  }
-  typeSelect.addEventListener('change', () => {
-    const oldType = f.type;
-    f.type = typeSelect.value;
-    if (f.type !== oldType) {
-      if (f.type === 'object' || f.type === 'array') {
-        f.value = '';
-        if (!f.children) f.children = [];
-      } else {
-        f.children = [];
-        f.value = '';
+    const item = document.createElement('span');
+    item.textContent = t;
+    item.dataset.type = t;
+    if (t === f.type) item.classList.add('active');
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (t === f.type) return;
+      const oldType = f.type;
+      f.type = t;
+      if (f.type !== oldType) {
+        if (f.type === 'object' || f.type === 'array') {
+          f.value = '';
+          if (!f.children) f.children = [];
+        } else {
+          f.children = [];
+          f.value = '';
+        }
       }
+      scheduleRender();
+    });
+    typeMenu.appendChild(item);
+  }
+  typeWrap.appendChild(typeMenu);
+  let hideTimer = null;
+  function showMenu() {
+    clearTimeout(hideTimer);
+    const rect = typeCur.getBoundingClientRect();
+    const menuHeight = typeMenu.scrollHeight || 140;
+    const spaceBelow = window.innerHeight - rect.bottom - 4;
+    typeMenu.style.position = 'fixed';
+    typeMenu.style.left = rect.left + 'px';
+    typeMenu.style.width = rect.width + 'px';
+    if (spaceBelow >= menuHeight) {
+      typeMenu.style.top = (rect.bottom + 2) + 'px';
+      typeMenu.style.bottom = 'auto';
+    } else {
+      typeMenu.style.top = 'auto';
+      typeMenu.style.bottom = (window.innerHeight - rect.top + 2) + 'px';
     }
-    scheduleRender();
-  });
-  row.appendChild(typeSelect);
+    typeWrap.classList.add('open');
+  }
+  function hideMenu() { hideTimer = setTimeout(() => typeWrap.classList.remove('open'), 200); }
+  typeWrap.addEventListener('mouseenter', showMenu);
+  typeWrap.addEventListener('mouseleave', hideMenu);
+  typeMenu.addEventListener('mouseenter', showMenu);
+  typeMenu.addEventListener('mouseleave', hideMenu);
+  row.appendChild(typeWrap);
 
   // Add child button (right after type)
   if (f.type === 'object' || f.type === 'array') {
@@ -208,16 +241,16 @@ function renderFieldRow(f, siblings, index, depth) {
     input.addEventListener('input', () => { f.value = input.value; scheduleJsonUpdate(); });
     row.appendChild(input);
   } else if (f.type === 'boolean') {
-    const select = document.createElement('select');
-    select.className = 'field-value-boolean';
-    ['true', 'false'].forEach(v => {
-      const opt = document.createElement('option');
-      opt.value = v; opt.textContent = v;
-      if (v === f.value) opt.selected = true;
-      select.appendChild(opt);
+    const tag = document.createElement('span');
+    tag.className = 'field-value-boolean';
+    tag.textContent = f.value === 'true' ? 'true' : 'false';
+    tag.tabIndex = 0;
+    tag.addEventListener('click', () => {
+      f.value = f.value === 'true' ? 'false' : 'true';
+      tag.textContent = f.value;
+      scheduleJsonUpdate();
     });
-    select.addEventListener('change', () => { f.value = select.value; scheduleJsonUpdate(); });
-    row.appendChild(select);
+    row.appendChild(tag);
   } else {
     const placeholder = document.createElement('span');
     placeholder.className = 'field-value-placeholder';

@@ -62,7 +62,7 @@ body {
 /* ── Main layout ─────────────────── */
 
 .app-main {
-  display: flex; gap: 12px; align-items: stretch;
+  display: flex; gap: 12px; align-items: stretch; min-height: 460px;
 }
 
 /* ── Panels ──────────────────────── */
@@ -129,11 +129,37 @@ body {
 
 .field-name-input:focus { border-color: #4a90d9; }
 
-.field-type-select {
-  width: 80px; padding: 5px 4px; border: 1px solid #e0e0e0;
-  border-radius: 4px; font-size: 12px; background: #fff;
-  outline: none; cursor: pointer;
+.field-type-wrap {
+  position: relative; width: 80px; flex-shrink: 0;
 }
+
+.field-type-current {
+  display: block; padding: 5px 8px; border: 1px solid #e0e0e0;
+  border-radius: 4px; font-size: 12px; text-align: left;
+  background: #fff; cursor: default;
+}
+
+.field-type-wrap.open .field-type-current {
+  border-color: #4a90d9;
+}
+
+.field-type-menu {
+  display: none;
+  background: #fff; border: 1px solid #e0e0e0; border-radius: 4px;
+  z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.field-type-wrap.open .field-type-menu {
+  display: block;
+}
+
+.field-type-menu span {
+  display: block; padding: 4px 8px; font-size: 12px; cursor: pointer;
+  transition: background 0.1s;
+}
+
+.field-type-menu span:hover { background: #f0f0f0; }
+.field-type-menu span.active { background: #eaf2fb; color: #4a90d9; font-weight: 500; }
 
 .field-value-input {
   flex: 1; min-width: 60px; padding: 5px 8px;
@@ -145,10 +171,13 @@ body {
 .field-value-input:focus { border-color: #4a90d9; }
 
 .field-value-boolean {
-  width: 70px; padding: 5px 4px; border: 1px solid #e0e0e0;
-  border-radius: 4px; font-size: 12px; background: #fff;
-  outline: none; cursor: pointer;
+  width: 54px; padding: 4px 8px; border: 1px solid #4a90d9;
+  border-radius: 10px; font-size: 12px; font-weight: 500;
+  background: #eaf2fb; color: #2c6cb0; text-align: center;
+  cursor: pointer; user-select: none; outline: none;
+  transition: all 0.15s;
 }
+.field-value-boolean:hover { background: #d4e4f7; }
 
 .field-value-placeholder {
   flex: 1; padding: 5px 8px; font-size: 12px; color: #bbb;
