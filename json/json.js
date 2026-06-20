@@ -46,6 +46,22 @@ function countFields(list) {
   return n;
 }
 
+function syncDupWarnings(siblings, parentEl) {
+  if (!parentEl) return;
+  const count = {};
+  for (const s of siblings) {
+    if (s && s.name) count[s.name] = (count[s.name] || 0) + 1;
+  }
+  const dup = new Set();
+  for (const [name, c] of Object.entries(count)) {
+    if (c > 1) dup.add(name);
+  }
+  const inputs = parentEl.querySelectorAll('.field-name-input');
+  for (const input of inputs) {
+    input.classList.toggle('field-name-dup', dup.has(input.value));
+  }
+}
+
 function buildJson(list) {
   // Single unnamed root field: unwrap to surface its content
   if (list.length === 1 && !list[0].name) {
@@ -63,13 +79,13 @@ function getFieldValue(f) {
   if (f.type === 'object') {
     const o = {};
     for (const c of (f.children || [])) {
-      if (!c.name) continue;
+      if (!c || !c.name) continue;
       o[c.name] = getFieldValue(c);
     }
     return o;
   }
   if (f.type === 'array') {
-    return (f.children || []).map(c => getFieldValue(c));
+    return (f.children || []).filter(c => c).map(c => getFieldValue(c));
   }
   if (f.q === false) {
     const v = f.value;
@@ -96,6 +112,7 @@ function renderFields() {
   for (let i = 0; i < fields.length; i++) {
     fieldList.appendChild(renderFieldRow(fields[i], fields, i, 0));
   }
+  syncDupWarnings(fields, fieldList);
 }
 
 function renderFieldRow(f, siblings, index, depth, containerType) {
@@ -134,8 +151,14 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
     nameInput.className = 'field-name-input';
     nameInput.placeholder = '字段名';
     nameInput.value = f.name;
-    nameInput.addEventListener('input', () => { f.name = nameInput.value; scheduleJsonUpdate(); });
+    nameInput.addEventListener('input', () => {
+      f.name = nameInput.value;
+      scheduleJsonUpdate();
+      const parentEl = (nameInput.closest('#field-list') || nameInput.closest('.field-indent'));
+      if (parentEl) syncDupWarnings(siblings, parentEl);
+    });
     nameInput.addEventListener('click', e => e.stopPropagation());
+    row.appendChild(nameInput);
     row.appendChild(nameInput);
   }
 
@@ -155,7 +178,14 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
     f.type = next;
     if (isContainer) {
       f.value = '';
-      if (!f.children) f.children = [];
+      f.children = [];
+      if (next === 'array') {
+        const obj = createField('', 'object', '');
+        obj.children = [createField('', 'string', '')];
+        f.children.push(obj);
+      } else {
+        f.children.push(createField('', 'string', ''));
+      }
     } else {
       // switching to string mode — default to quoted
       f.q = true;
@@ -174,8 +204,14 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
     addBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (!f.children) f.children = [];
-      const child = createField('', f.type === 'array' ? 'object' : 'string', '');
-      f.children.push(child);
+      f.children = f.children.filter(c => c);
+      if (f.type === 'array') {
+        const obj = createField('', 'object', '');
+        obj.children = [createField('', 'string', '')];
+        f.children.push(obj);
+      } else {
+        f.children.push(createField('', 'string', ''));
+      }
       scheduleRender();
     });
     row.appendChild(addBtn);
@@ -253,9 +289,11 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
     const indent = document.createElement('div');
     indent.className = 'field-indent';
     for (let i = 0; i < f.children.length; i++) {
+      if (!f.children[i]) continue;
       indent.appendChild(renderFieldRow(f.children[i], f.children, i, depth + 1, f.type));
     }
-    container.appendChild(indent);
+    if (indent.children.length > 0) container.appendChild(indent);
+    syncDupWarnings(f.children, indent);
   }
 
   return container;
