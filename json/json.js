@@ -32,7 +32,7 @@ let updateTimer = null;
 // ── Field helpers ─────────────────────────────────
 
 function createField(name, type, value) {
-  return { id: nextId(), name: name || '', type: type || 'string', value: value ?? '', children: [] };
+  return { id: nextId(), name: name || '', type: type || 'string', value: value ?? '', children: [], q: true };
 }
 
 function countFields(list) {
@@ -71,18 +71,14 @@ function getFieldValue(f) {
   if (f.type === 'array') {
     return (f.children || []).map(c => getFieldValue(c));
   }
-  if (f.type === 'literal') {
+  if (f.q === false) {
     const v = f.value;
     if (v === '' || v === 'null') return null;
     if (v === 'true') return true;
     if (v === 'false') return false;
     const num = Number(v);
     if (!isNaN(num) && v.trim() !== '') return num;
-    return v;
   }
-  // backward compat: old data with number/boolean
-  if (f.type === 'number') return f.value === '' ? null : Number(f.value);
-  if (f.type === 'boolean') return f.value === 'true';
   return f.value;
 }
 
@@ -144,8 +140,8 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
   }
 
   // Type toggle button: "" → {} → [] → 1
-  const typeCycle = ['string', 'object', 'array', 'literal'];
-  const typeLabel = { string: '""', object: '{}', array: '[]', literal: '1' };
+  const typeCycle = ['string', 'object', 'array'];
+  const typeLabel = { string: 'V', object: '{}', array: '[]' };
   const typeBtn = document.createElement('button');
   typeBtn.className = 'field-type-btn';
   typeBtn.textContent = typeLabel[f.type] || '""';
@@ -160,9 +156,10 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
     if (isContainer) {
       f.value = '';
       if (!f.children) f.children = [];
-    } else if (wasContainer) {
-      f.children = [];
-      f.value = '';
+    } else {
+      // switching to string mode — default to quoted
+      f.q = true;
+      if (wasContainer) { f.children = []; f.value = ''; }
     }
     scheduleRender();
   });
@@ -177,7 +174,7 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
     addBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (!f.children) f.children = [];
-      const child = createField('', 'string', '');
+      const child = createField('', f.type === 'array' ? 'object' : 'string', '');
       f.children.push(child);
       scheduleRender();
     });
@@ -186,64 +183,43 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
 
   // Value input
   if (f.type === 'string') {
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'field-value-input';
-    input.placeholder = '值';
-    input.value = f.value;
-    input.addEventListener('input', () => { f.value = input.value; scheduleJsonUpdate(); });
-    row.appendChild(input);
-  } else if (f.type === 'literal') {
-    const litWrap = document.createElement('span');
-    litWrap.className = 'literal-wrap';
+    const valWrap = document.createElement('span');
+    valWrap.className = 'literal-wrap';
 
-    const modeBtn = document.createElement('button');
-    modeBtn.className = 'literal-mode-btn';
+    const textInput = document.createElement('input');
+    textInput.type = 'text';
+    textInput.className = 'field-value-input';
+    textInput.placeholder = '值';
+    textInput.value = f.value;
+    textInput.addEventListener('input', () => { f.value = textInput.value; syncQuote(); scheduleJsonUpdate(); });
 
-    const boolTag = document.createElement('span');
-    boolTag.className = 'literal-bool';
+    const quoteBtn = document.createElement('button');
+    quoteBtn.className = 'literal-mode-btn';
+    quoteBtn.textContent = '"';
 
-    const numInput = document.createElement('input');
-    numInput.type = 'text';
-    numInput.className = 'field-value-input';
-    numInput.placeholder = '123';
-
-    function syncLiteralUI() {
-      if (f.value === 'true' || f.value === 'false') {
-        modeBtn.textContent = f.value === 'true' ? 'T' : 'F';
-        boolTag.textContent = f.value;
-        boolTag.style.display = '';
-        numInput.style.display = 'none';
-      } else {
-        modeBtn.textContent = '#';
-        numInput.value = f.value;
-        boolTag.style.display = 'none';
-        numInput.style.display = '';
-      }
+    function needsQuotes(v) {
+      if (v === 'true' || v === 'false' || v === 'null') return false;
+      if (v === '' || v.trim() === '') return false;
+      if (!isNaN(Number(v)) && v.trim() !== '') return false;
+      return true;
     }
 
-    modeBtn.addEventListener('click', (e) => {
+    function syncQuote() {
+      quoteBtn.classList.toggle('on', f.q !== false);
+      textInput.classList.toggle('warn', f.q === false && needsQuotes(f.value));
+    }
+
+    quoteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (f.value === 'true') f.value = 'false';
-      else if (f.value === 'false') f.value = '';
-      else f.value = 'true';
-      syncLiteralUI();
+      f.q = f.q === false ? true : false;
+      syncQuote();
       scheduleJsonUpdate();
     });
-    litWrap.appendChild(modeBtn);
 
-    boolTag.addEventListener('click', () => {
-      f.value = f.value === 'true' ? 'false' : 'true';
-      boolTag.textContent = f.value;
-      scheduleJsonUpdate();
-    });
-    litWrap.appendChild(boolTag);
-
-    numInput.addEventListener('input', () => { f.value = numInput.value; scheduleJsonUpdate(); });
-    litWrap.appendChild(numInput);
-
-    syncLiteralUI();
-    row.appendChild(litWrap);
+    valWrap.appendChild(quoteBtn);
+    valWrap.appendChild(textInput);
+    syncQuote();
+    row.appendChild(valWrap);
   } else {
     const placeholder = document.createElement('span');
     placeholder.className = 'field-value-placeholder';
