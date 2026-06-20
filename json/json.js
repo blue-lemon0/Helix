@@ -137,6 +137,21 @@ function render() {
 function renderFields() {
   fieldList.innerHTML = '';
 
+  if (fields.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'field-empty';
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-secondary';
+    btn.textContent = '+ 添加字段';
+    btn.addEventListener('click', () => {
+      fields.push(createField('', 'string', ''));
+      render();
+    });
+    empty.appendChild(btn);
+    fieldList.appendChild(empty);
+    return;
+  }
+
   for (let i = 0; i < fields.length; i++) {
     fieldList.appendChild(renderFieldRow(fields[i], fields, i, 0));
   }
