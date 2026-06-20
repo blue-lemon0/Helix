@@ -71,6 +71,16 @@ function getFieldValue(f) {
   if (f.type === 'array') {
     return (f.children || []).map(c => getFieldValue(c));
   }
+  if (f.type === 'literal') {
+    const v = f.value;
+    if (v === '' || v === 'null') return null;
+    if (v === 'true') return true;
+    if (v === 'false') return false;
+    const num = Number(v);
+    if (!isNaN(num) && v.trim() !== '') return num;
+    return v;
+  }
+  // backward compat: old data with number/boolean
   if (f.type === 'number') return f.value === '' ? null : Number(f.value);
   if (f.type === 'boolean') return f.value === 'true';
   return f.value;
@@ -92,7 +102,7 @@ function renderFields() {
   }
 }
 
-function renderFieldRow(f, siblings, index, depth) {
+function renderFieldRow(f, siblings, index, depth, containerType) {
   const container = document.createElement('div');
 
   const row = document.createElement('div');
@@ -109,7 +119,7 @@ function renderFieldRow(f, siblings, index, depth) {
   // Add sibling button (left)
   const addSiblingBtn = document.createElement('button');
   addSiblingBtn.className = 'btn-icon btn-icon-add';
-  addSiblingBtn.textContent = '➕';
+  addSiblingBtn.textContent = '+';
   addSiblingBtn.title = '添加同级别字段';
   addSiblingBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -119,88 +129,50 @@ function renderFieldRow(f, siblings, index, depth) {
   });
   row.appendChild(addSiblingBtn);
 
-  // Name input
-  const nameInput = document.createElement('input');
-  nameInput.type = 'text';
-  nameInput.className = 'field-name-input';
-  nameInput.placeholder = '字段名';
-  nameInput.value = f.name;
-  nameInput.addEventListener('input', () => { f.name = nameInput.value; scheduleJsonUpdate(); });
-  nameInput.addEventListener('click', e => e.stopPropagation());
-  row.appendChild(nameInput);
+  // Name input (hidden for array children — show index instead)
+  if (containerType === 'array') {
+    // array children have no label — skip
+  } else {
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'field-name-input';
+    nameInput.placeholder = '字段名';
+    nameInput.value = f.name;
+    nameInput.addEventListener('input', () => { f.name = nameInput.value; scheduleJsonUpdate(); });
+    nameInput.addEventListener('click', e => e.stopPropagation());
+    row.appendChild(nameInput);
+  }
 
-  // Type select (hover dropdown)
-  const typeWrap = document.createElement('span');
-  typeWrap.className = 'field-type-wrap';
-  const typeCur = document.createElement('span');
-  typeCur.className = 'field-type-current';
-  typeCur.textContent = f.type;
-  typeWrap.appendChild(typeCur);
-  const typeMenu = document.createElement('div');
-  typeMenu.className = 'field-type-menu';
-  const types = ['string', 'number', 'boolean', 'object', 'array'];
-  for (const t of types) {
-    const item = document.createElement('span');
-    item.textContent = t;
-    item.dataset.type = t;
-    if (t === f.type) item.classList.add('active');
-    item.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (t === f.type) return;
-      const oldType = f.type;
-      f.type = t;
-      if (f.type !== oldType) {
-        if (f.type === 'object' || f.type === 'array') {
-          f.value = '';
-          if (!f.children) f.children = [];
-        } else {
-          f.children = [];
-          f.value = '';
-        }
-      }
-      scheduleRender();
-    });
-    typeMenu.appendChild(item);
-  }
-  typeWrap.appendChild(typeMenu);
-  let showTimer = null;
-  let hideTimer = null;
-  function showMenu() {
-    clearTimeout(showTimer);
-    clearTimeout(hideTimer);
-    showTimer = setTimeout(() => {
-      const rect = typeCur.getBoundingClientRect();
-      const menuHeight = typeMenu.scrollHeight || 140;
-      const spaceBelow = window.innerHeight - rect.bottom - 4;
-      typeMenu.style.position = 'fixed';
-      typeMenu.style.left = rect.left + 'px';
-      typeMenu.style.width = rect.width + 'px';
-      if (spaceBelow >= menuHeight) {
-        typeMenu.style.top = (rect.bottom + 2) + 'px';
-        typeMenu.style.bottom = 'auto';
-      } else {
-        typeMenu.style.top = 'auto';
-        typeMenu.style.bottom = (window.innerHeight - rect.top + 2) + 'px';
-      }
-      typeWrap.classList.add('open');
-    }, 250);
-  }
-  function hideMenu() {
-    clearTimeout(showTimer);
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(() => typeWrap.classList.remove('open'), 200);
-  }
-  typeWrap.addEventListener('mouseenter', showMenu);
-  typeWrap.addEventListener('mouseleave', hideMenu);
-  typeMenu.addEventListener('mouseenter', showMenu);
-  typeMenu.addEventListener('mouseleave', hideMenu);
-  row.appendChild(typeWrap);
+  // Type toggle button: "" → {} → [] → 1
+  const typeCycle = ['string', 'object', 'array', 'literal'];
+  const typeLabel = { string: '""', object: '{}', array: '[]', literal: '1' };
+  const typeBtn = document.createElement('button');
+  typeBtn.className = 'field-type-btn';
+  typeBtn.textContent = typeLabel[f.type] || '""';
+  typeBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const idx = typeCycle.indexOf(f.type);
+    const next = typeCycle[(idx + 1) % typeCycle.length];
+    if (next === f.type) return;
+    const wasContainer = f.type === 'object' || f.type === 'array';
+    const isContainer = next === 'object' || next === 'array';
+    f.type = next;
+    if (isContainer) {
+      f.value = '';
+      if (!f.children) f.children = [];
+    } else if (wasContainer) {
+      f.children = [];
+      f.value = '';
+    }
+    scheduleRender();
+  });
+  row.appendChild(typeBtn);
 
   // Add child button (right after type)
   if (f.type === 'object' || f.type === 'array') {
     const addBtn = document.createElement('button');
-    addBtn.className = 'btn-icon btn-icon-add';
-    addBtn.textContent = '➕';
+    addBtn.className = 'btn-icon btn-icon-add-child';
+    addBtn.textContent = '↳';
     addBtn.title = '添加子字段';
     addBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -221,25 +193,57 @@ function renderFieldRow(f, siblings, index, depth) {
     input.value = f.value;
     input.addEventListener('input', () => { f.value = input.value; scheduleJsonUpdate(); });
     row.appendChild(input);
-  } else if (f.type === 'number') {
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.className = 'field-value-input';
-    input.placeholder = '0';
-    input.value = f.value;
-    input.addEventListener('input', () => { f.value = input.value; scheduleJsonUpdate(); });
-    row.appendChild(input);
-  } else if (f.type === 'boolean') {
-    const tag = document.createElement('span');
-    tag.className = 'field-value-boolean';
-    tag.textContent = f.value === 'true' ? 'true' : 'false';
-    tag.tabIndex = 0;
-    tag.addEventListener('click', () => {
-      f.value = f.value === 'true' ? 'false' : 'true';
-      tag.textContent = f.value;
+  } else if (f.type === 'literal') {
+    const litWrap = document.createElement('span');
+    litWrap.className = 'literal-wrap';
+
+    const modeBtn = document.createElement('button');
+    modeBtn.className = 'literal-mode-btn';
+
+    const boolTag = document.createElement('span');
+    boolTag.className = 'literal-bool';
+
+    const numInput = document.createElement('input');
+    numInput.type = 'text';
+    numInput.className = 'field-value-input';
+    numInput.placeholder = '123';
+
+    function syncLiteralUI() {
+      if (f.value === 'true' || f.value === 'false') {
+        modeBtn.textContent = f.value === 'true' ? 'T' : 'F';
+        boolTag.textContent = f.value;
+        boolTag.style.display = '';
+        numInput.style.display = 'none';
+      } else {
+        modeBtn.textContent = '#';
+        numInput.value = f.value;
+        boolTag.style.display = 'none';
+        numInput.style.display = '';
+      }
+    }
+
+    modeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (f.value === 'true') f.value = 'false';
+      else if (f.value === 'false') f.value = '';
+      else f.value = 'true';
+      syncLiteralUI();
       scheduleJsonUpdate();
     });
-    row.appendChild(tag);
+    litWrap.appendChild(modeBtn);
+
+    boolTag.addEventListener('click', () => {
+      f.value = f.value === 'true' ? 'false' : 'true';
+      boolTag.textContent = f.value;
+      scheduleJsonUpdate();
+    });
+    litWrap.appendChild(boolTag);
+
+    numInput.addEventListener('input', () => { f.value = numInput.value; scheduleJsonUpdate(); });
+    litWrap.appendChild(numInput);
+
+    syncLiteralUI();
+    row.appendChild(litWrap);
   } else {
     const placeholder = document.createElement('span');
     placeholder.className = 'field-value-placeholder';
@@ -273,7 +277,7 @@ function renderFieldRow(f, siblings, index, depth) {
     const indent = document.createElement('div');
     indent.className = 'field-indent';
     for (let i = 0; i < f.children.length; i++) {
-      indent.appendChild(renderFieldRow(f.children[i], f.children, i, depth + 1));
+      indent.appendChild(renderFieldRow(f.children[i], f.children, i, depth + 1, f.type));
     }
     container.appendChild(indent);
   }
