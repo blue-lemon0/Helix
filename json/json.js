@@ -415,7 +415,7 @@ function jsonToFields(val) {
 
   if (typeof val !== 'object') {
     const f = createField('', getValueType(val));
-    f.value = String(val ?? '');
+    assignPrimitiveValue(f, val);
     result.push(f);
     return result;
   }
@@ -427,7 +427,7 @@ function jsonToFields(val) {
       if (type === 'object' || type === 'array') {
         f.children = jsonToFields(item);
       } else {
-        f.value = String(item ?? '');
+        assignPrimitiveValue(f, item);
       }
       result.push(f);
     });
@@ -439,12 +439,25 @@ function jsonToFields(val) {
       if (type === 'object' || type === 'array') {
         f.children = jsonToFields(item);
       } else {
-        f.value = String(item ?? '');
+        assignPrimitiveValue(f, item);
       }
       result.push(f);
     }
   }
   return result;
+}
+
+function assignPrimitiveValue(f, val) {
+  if (val === null) {
+    f.value = 'null';
+    f.q = false;
+  } else if (typeof val === 'boolean' || typeof val === 'number') {
+    f.value = String(val);
+    f.q = false;
+  } else {
+    f.value = String(val);
+    f.q = true;
+  }
 }
 
 function getValueType(val) {
