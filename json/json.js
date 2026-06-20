@@ -4,7 +4,6 @@ const fieldList = document.getElementById('field-list');
 const jsonCode = document.getElementById('json-code');
 const copyBtn = document.getElementById('copy-btn');
 const footerCount = document.getElementById('footer-count');
-const addRootBtn = document.getElementById('add-root-btn');
 const clearBtn = document.getElementById('clear-btn');
 const importBtn = document.getElementById('import-btn');
 
@@ -48,6 +47,10 @@ function countFields(list) {
 }
 
 function buildJson(list) {
+  // Single unnamed root field: unwrap to surface its content
+  if (list.length === 1 && !list[0].name) {
+    return getFieldValue(list[0]);
+  }
   const obj = {};
   for (const f of list) {
     if (!f.name) continue;
@@ -66,26 +69,11 @@ function getFieldValue(f) {
     return o;
   }
   if (f.type === 'array') {
-    const arr = [];
-    for (const c of (f.children || [])) {
-      arr.push(getFieldValue(c));
-    }
-    return arr;
+    return (f.children || []).map(c => getFieldValue(c));
   }
   if (f.type === 'number') return f.value === '' ? null : Number(f.value);
   if (f.type === 'boolean') return f.value === 'true';
   return f.value;
-}
-
-function findParent(list, id, parent) {
-  for (const f of list) {
-    if (f.id === id) return parent || null;
-    if ((f.type === 'object' || f.type === 'array') && f.children) {
-      const found = findParent(f.children, id, f);
-      if (found) return found;
-    }
-  }
-  return null;
 }
 
 // ── Render ────────────────────────────────────────
@@ -97,20 +85,33 @@ function render() {
 }
 
 function renderFields() {
+  fieldList.innerHTML = '';
+
   if (fields.length === 0) {
-    fieldList.innerHTML = `<div class="field-empty">
-      <span class="empty-icon">📭</span>
-      还没有字段<br>点击「添加根字段」开始
-    </div>`;
+    const empty = document.createElement('div');
+    empty.className = 'field-empty';
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-primary';
+    btn.innerHTML = '➕ 添加字段';
+    btn.addEventListener('click', () => {
+      fields.push(createField('', 'string', ''));
+      render();
+      requestAnimationFrame(() => {
+        const inputs = fieldList.querySelectorAll('.field-name-input');
+        if (inputs.length > 0) inputs[inputs.length - 1].focus();
+      });
+    });
+    empty.appendChild(btn);
+    fieldList.appendChild(empty);
     return;
   }
-  fieldList.innerHTML = '';
-  for (const f of fields) {
-    fieldList.appendChild(renderFieldRow(f, 0));
+
+  for (let i = 0; i < fields.length; i++) {
+    fieldList.appendChild(renderFieldRow(fields[i], fields, i, 0));
   }
 }
 
-function renderFieldRow(f, depth) {
+function renderFieldRow(f, siblings, index, depth) {
   const container = document.createElement('div');
 
   const row = document.createElement('div');
@@ -124,13 +125,26 @@ function renderFieldRow(f, depth) {
     row.appendChild(gutter);
   }
 
+  // Add sibling button (left)
+  const addSiblingBtn = document.createElement('button');
+  addSiblingBtn.className = 'btn-icon btn-icon-add';
+  addSiblingBtn.textContent = '➕';
+  addSiblingBtn.title = '添加同级别字段';
+  addSiblingBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const newField = createField('', 'string', '');
+    siblings.splice(index + 1, 0, newField);
+    scheduleRender();
+  });
+  row.appendChild(addSiblingBtn);
+
   // Name input
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
   nameInput.className = 'field-name-input';
-  nameInput.placeholder = f.type === 'array' ? '索引' : '字段名';
+  nameInput.placeholder = '字段名';
   nameInput.value = f.name;
-  nameInput.addEventListener('input', () => { f.name = nameInput.value; scheduleUpdate(); });
+  nameInput.addEventListener('input', () => { f.name = nameInput.value; scheduleJsonUpdate(); });
   nameInput.addEventListener('click', e => e.stopPropagation());
   row.appendChild(nameInput);
 
@@ -156,9 +170,25 @@ function renderFieldRow(f, depth) {
         f.value = '';
       }
     }
-    scheduleUpdate();
+    scheduleRender();
   });
   row.appendChild(typeSelect);
+
+  // Add child button (right after type)
+  if (f.type === 'object' || f.type === 'array') {
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn-icon btn-icon-add';
+    addBtn.textContent = '➕';
+    addBtn.title = '添加子字段';
+    addBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!f.children) f.children = [];
+      const child = createField('', 'string', '');
+      f.children.push(child);
+      scheduleRender();
+    });
+    row.appendChild(addBtn);
+  }
 
   // Value input
   if (f.type === 'string') {
@@ -167,7 +197,7 @@ function renderFieldRow(f, depth) {
     input.className = 'field-value-input';
     input.placeholder = '值';
     input.value = f.value;
-    input.addEventListener('input', () => { f.value = input.value; scheduleUpdate(); });
+    input.addEventListener('input', () => { f.value = input.value; scheduleJsonUpdate(); });
     row.appendChild(input);
   } else if (f.type === 'number') {
     const input = document.createElement('input');
@@ -175,7 +205,7 @@ function renderFieldRow(f, depth) {
     input.className = 'field-value-input';
     input.placeholder = '0';
     input.value = f.value;
-    input.addEventListener('input', () => { f.value = input.value; scheduleUpdate(); });
+    input.addEventListener('input', () => { f.value = input.value; scheduleJsonUpdate(); });
     row.appendChild(input);
   } else if (f.type === 'boolean') {
     const select = document.createElement('select');
@@ -186,7 +216,7 @@ function renderFieldRow(f, depth) {
       if (v === f.value) opt.selected = true;
       select.appendChild(opt);
     });
-    select.addEventListener('change', () => { f.value = select.value; scheduleUpdate(); });
+    select.addEventListener('change', () => { f.value = select.value; scheduleJsonUpdate(); });
     row.appendChild(select);
   } else {
     const placeholder = document.createElement('span');
@@ -195,27 +225,7 @@ function renderFieldRow(f, depth) {
     row.appendChild(placeholder);
   }
 
-  // Actions: add child / delete
-  const actions = document.createElement('div');
-  actions.className = 'field-actions';
-
-  if (f.type === 'object' || f.type === 'array') {
-    const addBtn = document.createElement('button');
-    addBtn.className = 'btn-icon';
-    addBtn.textContent = '➕';
-    addBtn.title = '添加子字段';
-    addBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (!f.children) f.children = [];
-      const child = f.type === 'array'
-        ? createField(String(f.children.length), 'string', '')
-        : createField('', 'string', '');
-      f.children.push(child);
-      scheduleUpdate();
-    });
-    actions.appendChild(addBtn);
-  }
-
+  // Delete button
   const delBtn = document.createElement('button');
   delBtn.className = 'btn-icon btn-icon-del';
   delBtn.textContent = '✕';
@@ -225,39 +235,23 @@ function renderFieldRow(f, depth) {
     const childCount = countFields(f.children || []);
     if (childCount > 0) {
       showConfirm(`该字段包含 ${childCount} 个子字段，确定删除吗？`, () => {
-        const parent = findParent(fields, f.id);
-        if (parent) {
-          const idx = parent.children.indexOf(f);
-          if (idx !== -1) parent.children.splice(idx, 1);
-        } else {
-          const idx = fields.indexOf(f);
-          if (idx !== -1) fields.splice(idx, 1);
-        }
-        scheduleUpdate();
+        siblings.splice(index, 1);
+        scheduleRender();
       });
     } else {
-      const parent = findParent(fields, f.id);
-      if (parent) {
-        const idx = parent.children.indexOf(f);
-        if (idx !== -1) parent.children.splice(idx, 1);
-      } else {
-        const idx = fields.indexOf(f);
-        if (idx !== -1) fields.splice(idx, 1);
-      }
-      scheduleUpdate();
+      siblings.splice(index, 1);
+      scheduleRender();
     }
   });
-  actions.appendChild(delBtn);
-
-  row.appendChild(actions);
+  row.appendChild(delBtn);
   container.appendChild(row);
 
   // Render children
   if ((f.type === 'object' || f.type === 'array') && f.children && f.children.length > 0) {
     const indent = document.createElement('div');
     indent.className = 'field-indent';
-    for (const c of f.children) {
-      indent.appendChild(renderFieldRow(c, depth + 1));
+    for (let i = 0; i < f.children.length; i++) {
+      indent.appendChild(renderFieldRow(f.children[i], f.children, i, depth + 1));
     }
     container.appendChild(indent);
   }
@@ -269,10 +263,9 @@ function renderFieldRow(f, depth) {
 
 function renderJson() {
   const obj = buildJson(fields);
-  const isRootArray = fields.length === 1 && fields[0].type === 'array';
   let text;
   try {
-    text = JSON.stringify(isRootArray ? (fields[0].children || []).map(c => getFieldValue(c)) : obj, null, 2);
+    text = JSON.stringify(obj, null, 2) || '{ }';
   } catch {
     text = '{ }';
   }
@@ -299,9 +292,14 @@ function updateFooter() {
 
 // ── Debounced update ──────────────────────────────
 
-function scheduleUpdate() {
+function scheduleRender() {
   clearTimeout(updateTimer);
-  updateTimer = setTimeout(render, 200);
+  updateTimer = setTimeout(render, 50);
+}
+
+function scheduleJsonUpdate() {
+  renderJson();
+  updateFooter();
 }
 
 // ── Copy ──────────────────────────────────────────
@@ -316,16 +314,6 @@ copyBtn.addEventListener('click', async () => {
   } catch {
     alert('复制失败');
   }
-});
-
-// ── Add root field ────────────────────────────────
-
-addRootBtn.addEventListener('click', () => {
-  fields.push(createField(`field${fields.length + 1}`, 'string', ''));
-  render();
-  // Focus the last name input
-  const inputs = fieldList.querySelectorAll('.field-name-input');
-  if (inputs.length > 0) inputs[inputs.length - 1].focus();
 });
 
 // ── Clear ─────────────────────────────────────────
@@ -384,47 +372,34 @@ function doImport() {
   }
 }
 
-function jsonToFields(val, parentType) {
+function jsonToFields(val) {
   const result = [];
   if (val === null || val === undefined) return result;
 
-  if (Array.isArray(val)) {
-    if (parentType === 'array') {
+  if (typeof val === 'object') {
+    if (Array.isArray(val)) {
       val.forEach((item, i) => {
         const type = getValueType(item);
         const f = createField(String(i), type);
         if (type === 'object' || type === 'array') {
-          f.children = jsonToFields(item, type);
+          f.children = jsonToFields(item);
         } else {
           f.value = String(item ?? '');
         }
         result.push(f);
       });
     } else {
-      const arrField = createField('', 'array');
-      arrField.children = jsonToFields(val, 'array');
-      result.push(arrField);
-    }
-    return result;
-  }
-
-  if (typeof val === 'object') {
-    if (parentType === 'array') {
-      const f = createField('', 'object');
-      f.children = jsonToFields(val, 'object');
-      result.push(f);
-      return result;
-    }
-    for (const key of Object.keys(val)) {
-      const item = val[key];
-      const type = getValueType(item);
-      const f = createField(key, type);
-      if (type === 'object' || type === 'array') {
-        f.children = jsonToFields(item, type);
-      } else {
-        f.value = String(item ?? '');
+      for (const key of Object.keys(val)) {
+        const item = val[key];
+        const type = getValueType(item);
+        const f = createField(key, type);
+        if (type === 'object' || type === 'array') {
+          f.children = jsonToFields(item);
+        } else {
+          f.value = String(item ?? '');
+        }
+        result.push(f);
       }
-      result.push(f);
     }
     return result;
   }

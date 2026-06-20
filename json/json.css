@@ -122,7 +122,7 @@ body {
 }
 
 .field-name-input {
-  width: 100px; padding: 5px 8px; border: 1px solid #e0e0e0;
+  width: 110px; padding: 5px 8px; border: 1px solid #e0e0e0;
   border-radius: 4px; font-size: 13px; font-family: inherit;
   outline: none; transition: border-color 0.15s;
 }
@@ -155,8 +155,6 @@ body {
   font-style: italic; white-space: nowrap;
 }
 
-.field-actions { display: flex; gap: 3px; flex-shrink: 0; }
-
 .btn-icon {
   width: 24px; height: 24px; padding: 0; border: none;
   border-radius: 4px; font-size: 14px; cursor: pointer;
@@ -166,6 +164,7 @@ body {
 }
 
 .btn-icon:hover { background: #f0f0f0; color: #555; }
+.btn-icon-add:hover { background: #e8f5e9; color: #2e7d32; }
 .btn-icon-del:hover { background: #fef0f0; color: #d9534f; }
 
 /* ── JSON preview ────────────────── */
