@@ -32,6 +32,19 @@ let fields = [createField('', 'string', '')];
 let confirmCallback = null;
 let updateTimer = null;
 let jsonEditMode = false;
+let focusFieldId = null;
+
+function focusNext(siblings, nextIndex) {
+  if (nextIndex < siblings.length) {
+    focusFieldId = siblings[nextIndex].id;
+    render();
+  } else {
+    const newField = createField('', 'string', '');
+    siblings.push(newField);
+    focusFieldId = newField.id;
+    render();
+  }
+}
 
 // ── Constants ──────────────────────────────────────
 
@@ -132,6 +145,11 @@ function render() {
   renderFields();
   renderJson();
   updateFooter();
+  if (focusFieldId) {
+    const el = fieldList.querySelector(`.field-row[data-id="${focusFieldId}"] .field-name-input`);
+    if (el) el.focus();
+    focusFieldId = null;
+  }
 }
 
 function renderFields() {
@@ -198,6 +216,15 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
       const parentEl = (nameInput.closest('#field-list') || nameInput.closest('.field-indent'));
       if (parentEl) syncDupWarnings(siblings, parentEl);
     });
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      if (f.type === 'string') {
+        const vi = row.querySelector('.field-value-input');
+        if (vi) { vi.focus(); return; }
+      }
+      focusNext(siblings, index + 1);
+    });
     nameInput.addEventListener('click', e => e.stopPropagation());
     row.appendChild(nameInput);
   }
@@ -254,6 +281,11 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
     textInput.placeholder = '值';
     textInput.value = f.value;
     textInput.addEventListener('input', () => { f.value = textInput.value; syncQuote(textInput, quoteBtn, f); scheduleJsonUpdate(); });
+    textInput.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      focusNext(siblings, index + 1);
+    });
 
     const quoteBtn = document.createElement('button');
     quoteBtn.className = 'btn-mini literal-mode-btn';
