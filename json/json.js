@@ -29,10 +29,24 @@ let fields = [createField('', 'string', '')];
 let confirmCallback = null;
 let updateTimer = null;
 
+// ── Constants ──────────────────────────────────────
+
+const TYPE_CYCLE = ['string', 'object', 'array'];
+const TYPE_LABEL = { string: 'V', object: '{}', array: '[]' };
+
 // ── Field helpers ─────────────────────────────────
 
 function createField(name, type, value) {
   return { id: nextId(), name: name || '', type: type || 'string', value: value ?? '', children: [], q: true };
+}
+
+function createChildFor(parentType) {
+  if (parentType === 'array') {
+    const obj = createField('', 'object', '');
+    obj.children = [createField('', 'string', '')];
+    return obj;
+  }
+  return createField('', 'string', '');
 }
 
 function countFields(list) {
@@ -143,9 +157,7 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
   row.appendChild(addSiblingBtn);
 
   // Name input (hidden for array children — show index instead)
-  if (containerType === 'array') {
-    // array children have no label — skip
-  } else {
+  if (containerType !== 'array') {
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
     nameInput.className = 'field-name-input';
@@ -159,19 +171,16 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
     });
     nameInput.addEventListener('click', e => e.stopPropagation());
     row.appendChild(nameInput);
-    row.appendChild(nameInput);
   }
 
   // Type toggle button: "" → {} → [] → 1
-  const typeCycle = ['string', 'object', 'array'];
-  const typeLabel = { string: 'V', object: '{}', array: '[]' };
   const typeBtn = document.createElement('button');
   typeBtn.className = 'field-type-btn';
-  typeBtn.textContent = typeLabel[f.type] || '""';
+  typeBtn.textContent = TYPE_LABEL[f.type] || '""';
   typeBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    const idx = typeCycle.indexOf(f.type);
-    const next = typeCycle[(idx + 1) % typeCycle.length];
+    const idx = TYPE_CYCLE.indexOf(f.type);
+    const next = TYPE_CYCLE[(idx + 1) % TYPE_CYCLE.length];
     if (next === f.type) return;
     const wasContainer = f.type === 'object' || f.type === 'array';
     const isContainer = next === 'object' || next === 'array';
@@ -179,13 +188,7 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
     if (isContainer) {
       f.value = '';
       f.children = [];
-      if (next === 'array') {
-        const obj = createField('', 'object', '');
-        obj.children = [createField('', 'string', '')];
-        f.children.push(obj);
-      } else {
-        f.children.push(createField('', 'string', ''));
-      }
+      f.children.push(createChildFor(next));
     } else {
       // switching to string mode — default to quoted
       f.q = true;
@@ -205,13 +208,7 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
       e.stopPropagation();
       if (!f.children) f.children = [];
       f.children = f.children.filter(c => c);
-      if (f.type === 'array') {
-        const obj = createField('', 'object', '');
-        obj.children = [createField('', 'string', '')];
-        f.children.push(obj);
-      } else {
-        f.children.push(createField('', 'string', ''));
-      }
+      f.children.push(createChildFor(f.type));
       scheduleRender();
     });
     row.appendChild(addBtn);
@@ -382,9 +379,7 @@ function closeImportModal() {
 
 modalClose.addEventListener('click', closeImportModal);
 modalCancel.addEventListener('click', closeImportModal);
-importModal.addEventListener('click', (e) => {
-  if (e.target === importModal) closeImportModal();
-});
+closeOnBackdrop(importModal, closeImportModal);
 
 importText.addEventListener('input', () => {
   modalImport.disabled = importText.value.trim().length === 0;
@@ -467,6 +462,12 @@ function showConfirm(msg, callback) {
   confirmModal.classList.add('active');
 }
 
+function closeOnBackdrop(overlay, closeFn) {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeFn();
+  });
+}
+
 function closeConfirm() {
   confirmModal.classList.remove('active');
   confirmCallback = null;
@@ -478,9 +479,7 @@ confirmOk.addEventListener('click', () => {
 });
 
 confirmCancel.addEventListener('click', closeConfirm);
-confirmModal.addEventListener('click', (e) => {
-  if (e.target === confirmModal) closeConfirm();
-});
+closeOnBackdrop(confirmModal, closeConfirm);
 
 // ── Keyboard shortcut ─────────────────────────────
 
