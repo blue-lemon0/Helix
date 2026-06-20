@@ -24,7 +24,7 @@ const confirmCancel = document.getElementById('confirm-cancel');
 let uid = 0;
 function nextId() { return ++uid; }
 
-let fields = [];
+let fields = [createField('', 'string', '')];
 
 let confirmCallback = null;
 let updateTimer = null;
@@ -86,25 +86,6 @@ function render() {
 
 function renderFields() {
   fieldList.innerHTML = '';
-
-  if (fields.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'field-empty';
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-primary';
-    btn.innerHTML = '➕ 添加字段';
-    btn.addEventListener('click', () => {
-      fields.push(createField('', 'string', ''));
-      render();
-      requestAnimationFrame(() => {
-        const inputs = fieldList.querySelectorAll('.field-name-input');
-        if (inputs.length > 0) inputs[inputs.length - 1].focus();
-      });
-    });
-    empty.appendChild(btn);
-    fieldList.appendChild(empty);
-    return;
-  }
 
   for (let i = 0; i < fields.length; i++) {
     fieldList.appendChild(renderFieldRow(fields[i], fields, i, 0));
@@ -182,25 +163,33 @@ function renderFieldRow(f, siblings, index, depth) {
     typeMenu.appendChild(item);
   }
   typeWrap.appendChild(typeMenu);
+  let showTimer = null;
   let hideTimer = null;
   function showMenu() {
+    clearTimeout(showTimer);
     clearTimeout(hideTimer);
-    const rect = typeCur.getBoundingClientRect();
-    const menuHeight = typeMenu.scrollHeight || 140;
-    const spaceBelow = window.innerHeight - rect.bottom - 4;
-    typeMenu.style.position = 'fixed';
-    typeMenu.style.left = rect.left + 'px';
-    typeMenu.style.width = rect.width + 'px';
-    if (spaceBelow >= menuHeight) {
-      typeMenu.style.top = (rect.bottom + 2) + 'px';
-      typeMenu.style.bottom = 'auto';
-    } else {
-      typeMenu.style.top = 'auto';
-      typeMenu.style.bottom = (window.innerHeight - rect.top + 2) + 'px';
-    }
-    typeWrap.classList.add('open');
+    showTimer = setTimeout(() => {
+      const rect = typeCur.getBoundingClientRect();
+      const menuHeight = typeMenu.scrollHeight || 140;
+      const spaceBelow = window.innerHeight - rect.bottom - 4;
+      typeMenu.style.position = 'fixed';
+      typeMenu.style.left = rect.left + 'px';
+      typeMenu.style.width = rect.width + 'px';
+      if (spaceBelow >= menuHeight) {
+        typeMenu.style.top = (rect.bottom + 2) + 'px';
+        typeMenu.style.bottom = 'auto';
+      } else {
+        typeMenu.style.top = 'auto';
+        typeMenu.style.bottom = (window.innerHeight - rect.top + 2) + 'px';
+      }
+      typeWrap.classList.add('open');
+    }, 250);
   }
-  function hideMenu() { hideTimer = setTimeout(() => typeWrap.classList.remove('open'), 200); }
+  function hideMenu() {
+    clearTimeout(showTimer);
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => typeWrap.classList.remove('open'), 200);
+  }
   typeWrap.addEventListener('mouseenter', showMenu);
   typeWrap.addEventListener('mouseleave', hideMenu);
   typeMenu.addEventListener('mouseenter', showMenu);

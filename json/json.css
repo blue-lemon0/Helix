@@ -91,13 +91,6 @@ body {
   padding: 8px; overflow-y: auto; min-height: 200px;
 }
 
-.field-empty {
-  text-align: center; padding: 48px 16px; color: #bbb;
-  font-size: 14px; line-height: 1.8;
-}
-
-.field-empty .empty-icon { font-size: 32px; display: block; margin-bottom: 8px; }
-
 /* ── Field row ───────────────────── */
 
 .field-row {
