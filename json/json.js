@@ -34,6 +34,15 @@ let updateTimer = null;
 const TYPE_CYCLE = ['string', 'object', 'array'];
 const TYPE_LABEL = { string: 'V', object: '{}', array: '[]' };
 
+// ── Helpers ────────────────────────────────────────
+
+function needsQuotes(v) {
+  if (v === 'true' || v === 'false' || v === 'null') return false;
+  if (v === '' || v.trim() === '') return false;
+  if (!isNaN(Number(v)) && v.trim() !== '') return false;
+  return true;
+}
+
 // ── Field helpers ─────────────────────────────────
 
 function createField(name, type, value) {
@@ -145,7 +154,7 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
 
   // Add sibling button (left)
   const addSiblingBtn = document.createElement('button');
-  addSiblingBtn.className = 'btn-icon btn-icon-add';
+  addSiblingBtn.className = 'btn-mini btn-icon btn-icon-add';
   addSiblingBtn.textContent = '+';
   addSiblingBtn.title = '添加同级别字段';
   addSiblingBtn.addEventListener('click', (e) => {
@@ -175,7 +184,7 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
 
   // Type toggle button: "" → {} → [] → 1
   const typeBtn = document.createElement('button');
-  typeBtn.className = 'field-type-btn';
+  typeBtn.className = 'btn-mini field-type-btn';
   typeBtn.textContent = TYPE_LABEL[f.type] || '""';
   typeBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -201,7 +210,7 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
   // Add child button (right after type)
   if (f.type === 'object' || f.type === 'array') {
     const addBtn = document.createElement('button');
-    addBtn.className = 'btn-icon btn-icon-add-child';
+    addBtn.className = 'btn-mini btn-icon btn-icon-add-child';
     addBtn.textContent = '↳';
     addBtn.title = '添加子字段';
     addBtn.addEventListener('click', (e) => {
@@ -224,34 +233,27 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
     textInput.className = 'field-value-input';
     textInput.placeholder = '值';
     textInput.value = f.value;
-    textInput.addEventListener('input', () => { f.value = textInput.value; syncQuote(); scheduleJsonUpdate(); });
+    textInput.addEventListener('input', () => { f.value = textInput.value; syncQuote(textInput, quoteBtn, f); scheduleJsonUpdate(); });
 
     const quoteBtn = document.createElement('button');
-    quoteBtn.className = 'literal-mode-btn';
+    quoteBtn.className = 'btn-mini literal-mode-btn';
     quoteBtn.textContent = '"';
 
-    function needsQuotes(v) {
-      if (v === 'true' || v === 'false' || v === 'null') return false;
-      if (v === '' || v.trim() === '') return false;
-      if (!isNaN(Number(v)) && v.trim() !== '') return false;
-      return true;
-    }
-
-    function syncQuote() {
-      quoteBtn.classList.toggle('on', f.q !== false);
-      textInput.classList.toggle('warn', f.q === false && needsQuotes(f.value));
+    function syncQuote(input, btn, field) {
+      btn.classList.toggle('on', field.q !== false);
+      input.classList.toggle('warn', field.q === false && needsQuotes(field.value));
     }
 
     quoteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       f.q = f.q === false ? true : false;
-      syncQuote();
+      syncQuote(textInput, quoteBtn, f);
       scheduleJsonUpdate();
     });
 
     valWrap.appendChild(quoteBtn);
     valWrap.appendChild(textInput);
-    syncQuote();
+    syncQuote(textInput, quoteBtn, f);
     row.appendChild(valWrap);
   } else {
     const placeholder = document.createElement('span');
@@ -262,7 +264,7 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
 
   // Delete button
   const delBtn = document.createElement('button');
-  delBtn.className = 'btn-icon btn-icon-del';
+  delBtn.className = 'btn-mini btn-icon btn-icon-del';
   delBtn.textContent = '✕';
   delBtn.title = '删除';
   delBtn.addEventListener('click', (e) => {
@@ -273,10 +275,10 @@ function renderFieldRow(f, siblings, index, depth, containerType) {
         siblings.splice(index, 1);
         scheduleRender();
       });
-    } else {
-      siblings.splice(index, 1);
-      scheduleRender();
+      return;
     }
+    siblings.splice(index, 1);
+    scheduleRender();
   });
   row.appendChild(delBtn);
   container.appendChild(row);
@@ -411,37 +413,37 @@ function jsonToFields(val) {
   const result = [];
   if (val === null || val === undefined) return result;
 
-  if (typeof val === 'object') {
-    if (Array.isArray(val)) {
-      val.forEach((item, i) => {
-        const type = getValueType(item);
-        const f = createField(String(i), type);
-        if (type === 'object' || type === 'array') {
-          f.children = jsonToFields(item);
-        } else {
-          f.value = String(item ?? '');
-        }
-        result.push(f);
-      });
-    } else {
-      for (const key of Object.keys(val)) {
-        const item = val[key];
-        const type = getValueType(item);
-        const f = createField(key, type);
-        if (type === 'object' || type === 'array') {
-          f.children = jsonToFields(item);
-        } else {
-          f.value = String(item ?? '');
-        }
-        result.push(f);
-      }
-    }
+  if (typeof val !== 'object') {
+    const f = createField('', getValueType(val));
+    f.value = String(val ?? '');
+    result.push(f);
     return result;
   }
 
-  const f = createField('', getValueType(val));
-  f.value = String(val ?? '');
-  result.push(f);
+  if (Array.isArray(val)) {
+    val.forEach((item, i) => {
+      const type = getValueType(item);
+      const f = createField(String(i), type);
+      if (type === 'object' || type === 'array') {
+        f.children = jsonToFields(item);
+      } else {
+        f.value = String(item ?? '');
+      }
+      result.push(f);
+    });
+  } else {
+    for (const key of Object.keys(val)) {
+      const item = val[key];
+      const type = getValueType(item);
+      const f = createField(key, type);
+      if (type === 'object' || type === 'array') {
+        f.children = jsonToFields(item);
+      } else {
+        f.value = String(item ?? '');
+      }
+      result.push(f);
+    }
+  }
   return result;
 }
 
@@ -484,10 +486,9 @@ closeOnBackdrop(confirmModal, closeConfirm);
 // ── Keyboard shortcut ─────────────────────────────
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    if (importModal.classList.contains('active')) closeImportModal();
-    if (confirmModal.classList.contains('active')) closeConfirm();
-  }
+  if (e.key !== 'Escape') return;
+  if (importModal.classList.contains('active')) closeImportModal();
+  if (confirmModal.classList.contains('active')) closeConfirm();
 });
 
 // ── Init ──────────────────────────────────────────

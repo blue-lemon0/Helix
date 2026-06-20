@@ -40,6 +40,11 @@ body {
 
 /* ── Buttons ─────────────────────── */
 
+.btn-mini {
+  padding: 0; border-radius: 4px; cursor: pointer;
+  transition: all 0.15s;
+}
+
 .btn {
   padding: 7px 16px; border: none; border-radius: 6px;
   font-size: 13px; font-weight: 500; cursor: pointer;
@@ -56,8 +61,6 @@ body {
 
 .btn-danger { background: #fef0f0; color: #d9534f; }
 .btn-danger:hover:not(:disabled) { background: #fde0e0; }
-
-.btn-sm { padding: 4px 8px; font-size: 12px; }
 
 /* ── Main layout ─────────────────── */
 
@@ -109,11 +112,6 @@ body {
   display: flex; flex-direction: column; margin-left: 28px;
 }
 
-.field-indent-line {
-  border-left: 1.5px solid #e0e0e0; margin-left: 10px;
-  padding-left: 0;
-}
-
 .field-name-input {
   width: 110px; padding: 5px 8px; border: 1px solid #e0e0e0;
   border-radius: 4px; font-size: 13px; font-family: inherit;
@@ -122,14 +120,13 @@ body {
 
 .field-name-input:focus { border-color: #4a90d9; }
 
-.field-name-dup { border-color: #e67e22 !important; }
-.field-name-dup:focus { border-color: #e67e22 !important; }
+.field-name-input.field-name-dup { border-color: #e67e22; }
+.field-name-input.field-name-dup:focus { border-color: #e67e22; }
 
 .field-type-btn {
-  width: 24px; height: 24px; padding: 0; border: 1px solid #e0e0e0;
-  border-radius: 4px; font-size: 12px; text-align: center;
-  line-height: 22px; background: #fafafa; color: #555; cursor: pointer; flex-shrink: 0;
-  transition: all 0.15s;
+  width: 24px; height: 24px; border: 1px solid #e0e0e0;
+  font-size: 12px; text-align: center;
+  line-height: 22px; background: #fafafa; color: #555; flex-shrink: 0;
 }
 .field-type-btn:hover { background: #f0f0f0; border-color: #4a90d9; }
 
@@ -153,21 +150,19 @@ body {
 }
 
 .literal-mode-btn {
-  width: 22px; height: 22px; padding: 0; border: 1px solid #e0e0e0;
-  border-radius: 4px; font-size: 11px; font-weight: 600; text-align: center;
-  line-height: 20px; background: #fafafa; color: #555; cursor: pointer; flex-shrink: 0;
-  transition: all 0.15s;
+  width: 22px; height: 22px; border: 1px solid #e0e0e0;
+  font-size: 11px; font-weight: 600; text-align: center;
+  line-height: 20px; background: #fafafa; color: #555; flex-shrink: 0;
 }
 .literal-mode-btn:hover { background: #e3f2fd; color: #1976d2; border-color: #1976d2; }
 .literal-mode-btn.on { background: #e3f2fd; color: #1976d2; border-color: #1976d2; }
 .literal-mode-btn.off { color: #ccc; border-color: #eee; }
 
 .btn-icon {
-  width: 24px; height: 24px; padding: 0; border: none;
-  border-radius: 4px; font-size: 14px; cursor: pointer;
+  width: 24px; height: 24px; border: none;
+  font-size: 14px;
   background: transparent; color: #999;
   display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
 }
 
 .btn-icon:hover { background: #f0f0f0; color: #555; }
@@ -194,7 +189,6 @@ body {
 .json-boolean { color: #0550ae; }
 .json-null { color: #cf222e; }
 .json-bracket { color: #57606a; }
-.json-colon { color: #57606a; }
 
 /* ── JSON actions ────────────────── */
 
