@@ -19,6 +19,9 @@ const confirmText = document.getElementById('confirm-text');
 const confirmOk = document.getElementById('confirm-ok');
 const confirmCancel = document.getElementById('confirm-cancel');
 
+const editBtn = document.getElementById('edit-btn');
+const editArea = document.getElementById('json-edit-area');
+
 // ── State ─────────────────────────────────────────
 
 let uid = 0;
@@ -28,6 +31,7 @@ let fields = [createField('', 'string', '')];
 
 let confirmCallback = null;
 let updateTimer = null;
+let jsonEditMode = false;
 
 // ── Constants ──────────────────────────────────────
 
@@ -124,6 +128,7 @@ function getFieldValue(f) {
 // ── Render ────────────────────────────────────────
 
 function render() {
+  if (jsonEditMode) cancelEdit();
   renderFields();
   renderJson();
   updateFooter();
@@ -309,7 +314,7 @@ function renderJson() {
     text = '{ }';
   }
   jsonCode.innerHTML = highlightJson(text);
-  copyBtn.disabled = fields.length === 0;
+  if (!jsonEditMode) copyBtn.disabled = fields.length === 0;
 }
 
 function highlightJson(str) {
@@ -354,6 +359,66 @@ copyBtn.addEventListener('click', async () => {
     alert('复制失败');
   }
 });
+
+// ── Inline JSON editor ──────────────────────────
+
+const jsonPreview = document.getElementById('json-preview');
+let editCancelBtn = null;
+
+editBtn.addEventListener('click', () => {
+  if (!jsonEditMode) {
+    startEdit();
+  } else {
+    applyEdit();
+  }
+});
+
+function startEdit() {
+  jsonEditMode = true;
+  editArea.value = getJsonText();
+  jsonPreview.classList.add('edit-mode');
+  editBtn.textContent = '✅ 同步到字段';
+  editBtn.className = 'btn btn-primary';
+  copyBtn.disabled = true;
+  if (!editCancelBtn) {
+    editCancelBtn = document.createElement('button');
+    editCancelBtn.className = 'btn btn-secondary';
+    editCancelBtn.textContent = '取消';
+    editCancelBtn.addEventListener('click', cancelEdit);
+    copyBtn.parentNode.insertBefore(editCancelBtn, copyBtn);
+  }
+  editArea.focus();
+}
+
+function cancelEdit() {
+  jsonEditMode = false;
+  jsonPreview.classList.remove('edit-mode');
+  editBtn.textContent = '✏️ 编辑 JSON';
+  editBtn.className = 'btn btn-secondary';
+  copyBtn.disabled = fields.length === 0;
+  if (editCancelBtn) {
+    editCancelBtn.remove();
+    editCancelBtn = null;
+  }
+}
+
+function applyEdit() {
+  const raw = editArea.value.trim();
+  if (!raw) { cancelEdit(); return; }
+  try {
+    const parsed = JSON.parse(raw);
+    fields = jsonToFields(parsed);
+    cancelEdit();
+    render();
+  } catch (err) {
+    alert(`JSON 解析失败：${err.message}`);
+  }
+}
+
+function getJsonText() {
+  const obj = buildJson(fields);
+  try { return JSON.stringify(obj, null, 2); } catch { return '{ }'; }
+}
 
 // ── Clear ─────────────────────────────────────────
 

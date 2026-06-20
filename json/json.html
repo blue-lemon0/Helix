@@ -36,9 +36,11 @@
           <span class="panel-title">📄 生成的 JSON</span>
         </div>
         <div class="json-preview" id="json-preview">
-          <pre><code id="json-code">{ }</code></pre>
+          <pre class="json-pre"><code id="json-code">{ }</code></pre>
+          <textarea id="json-edit-area" class="json-edit-area" spellcheck="false"></textarea>
         </div>
-        <div class="json-actions">
+        <div class="json-actions" id="json-actions">
+          <button id="edit-btn" class="btn btn-secondary">✏️ 编辑 JSON</button>
           <button id="copy-btn" class="btn btn-primary" disabled>📋 复制 JSON</button>
         </div>
       </section>
