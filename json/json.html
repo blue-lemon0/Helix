@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON 构造器 - Helix</title>
+  <link rel="stylesheet" href="json.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="header-left">
+        <span class="header-icon">🧩</span>
+        <h1>JSON 构造器</h1>
+      </div>
+      <div class="header-right">
+        <span class="header-version">v1.0</span>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <button id="add-root-btn" class="btn btn-primary">➕ 添加根字段</button>
+      <button id="import-btn" class="btn btn-secondary">📂 从 JSON 导入</button>
+      <button id="clear-btn" class="btn btn-danger">🗑️ 清空全部</button>
+    </div>
+
+    <main class="app-main">
+      <section class="panel panel-left" id="field-panel">
+        <div class="panel-header">
+          <span class="panel-title">📋 字段列表</span>
+        </div>
+        <div class="field-list" id="field-list"></div>
+      </section>
+
+      <section class="panel panel-right">
+        <div class="panel-header">
+          <span class="panel-title">📄 生成的 JSON</span>
+        </div>
+        <div class="json-preview" id="json-preview">
+          <pre><code id="json-code">{ }</code></pre>
+        </div>
+        <div class="json-actions">
+          <button id="copy-btn" class="btn btn-primary" disabled>📋 复制 JSON</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span class="footer-hint">💡 填写字段名和值，JSON 自动生成</span>
+      <span class="footer-count" id="footer-count">共 0 个字段</span>
+    </footer>
+  </div>
+
+  <!-- Import modal -->
+  <div class="modal-overlay" id="import-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">📂 从 JSON 导入</span>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">粘贴一个 JSON 字符串，自动解析并填充到字段树</p>
+        <textarea id="import-text" class="import-text" placeholder='{"name": "张三", "age": 25}'></textarea>
+        <div class="import-error" id="import-error"></div>
+      </div>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn btn-secondary">取消</button>
+        <button id="modal-import" class="btn btn-primary" disabled>✅ 导入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm modal -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <span class="modal-title">确认操作</span>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-text">确定要删除该字段吗？</p>
+      </div>
+      <div class="modal-actions">
+        <button id="confirm-cancel" class="btn btn-secondary">取消</button>
+        <button id="confirm-ok" class="btn btn-danger">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="json.js"></script>
+</body>
+</html>
