@@ -529,8 +529,6 @@ function getValueType(val) {
   if (val === null || val === undefined) return 'string';
   if (Array.isArray(val)) return 'array';
   if (typeof val === 'object') return 'object';
-  if (typeof val === 'boolean') return 'boolean';
-  if (typeof val === 'number') return 'number';
   return 'string';
 }
 
